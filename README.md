@@ -1,7 +1,9 @@
 # SonoffHM
 
-- Voraussetzungen: 
+1.) Voraussetzungen: 
   - installiertes CUxD- und XML-API-Addon auf der CCU
+  - ein CUxD Exec-Device (was in den meisten Fällen wohl schon existiert)
+    - wie man dieses installiert bitte googlen, es gibt zahlreiche Anleitungen
   - ein CUxD Gerät, das wie folgt erstellt wird:
     - Typ = (28) System
     - Funktion = Exec
@@ -28,5 +30,17 @@ In der SonoffHM.ino müssen noch folgende Variablen angepasst werden:
     - die SSID des WLANs
   - char key[] =            "XXXXXX";
     - der WPA2-Key des WLANS
+
+
+Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet:
+- WENN: Geräteauswahl [das CUxD-Device] "bei Schaltzustand: ein" "bei Änderung auslösen"
+- DANN: Skript:
+  - var sonoff1ip = dom.GetObject("Sonoff1_IP").Value();
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoff1ip#"/1");
+- SONST: Skript:
+  - var sonoff1ip = dom.GetObject("Sonoff1_IP").Value();
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoff1ip#"/0");
+
+- wobei "Sonoff1_IP" der Name der Variable ist, die unter 1. erstellt wurde
 
 
