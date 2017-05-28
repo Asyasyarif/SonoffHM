@@ -15,7 +15,7 @@ In der SonoffHM.ino müssen noch folgende Variablen angepasst werden:
   - String ccuIP =          "192.168.1.1";           
     - die IP der CCU
   - String ChannelName =    "CUxD.CUX2801002:1";
-    - der Gerätekanal des neu angelegten CUxD-Devices
+    - der Gerätekanal des neu angelegten CUxD-Devices, zu finden zB im WebUI in der Geräteübersicht in der Spalte "Seriennummer"
   - String ise_Sonoff1_IP = "00000";
     - die ID der Systemvariablen für die IP
     - man findet sie über die XML-API:
