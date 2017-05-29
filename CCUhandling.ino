@@ -3,7 +3,7 @@ bool setStateCCUCUxD(String id, String value) {
   {
     HTTPClient http;
     http.setTimeout(5000);
-    String url = "http://" + ccuIP + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
+    String url = "http://" + String(ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
     Serial.println("setStateCCU url: " + url);
     http.begin(url);
     int httpCode = http.GET();
@@ -34,7 +34,7 @@ String getStateFromCCUCUxD(String id, String type) {
   {
     HTTPClient http;
     http.setTimeout(5000);
-    String url = "http://" + ccuIP + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
+    String url = "http://" + String(ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
     Serial.println("getStateCCU url: " + url);
     http.begin(url);
     int httpCode = http.GET();
