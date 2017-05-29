@@ -13,14 +13,12 @@
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
 #include <ArduinoOTA.h>
+#include <WiFiManager.h>
+#include <FS.h>
+#include <ArduinoJson.h>
 
-char ssid[] =           "XXXXXX";
-char key[] =            "XXXXXX";
-
-String ccuIP =          "192.168.1.1";
-String DeviceName =     "Sonoff1";
-
-String DeviceIP_Variable = DeviceName + "_IP";
+char ccuIP[15]      = "0.0.0.0";
+char DeviceName[20] = "";
 
 #define greenLEDPin 13
 #define RelayPin    12
@@ -28,19 +26,42 @@ String DeviceIP_Variable = DeviceName + "_IP";
 
 bool relayState = LOW;
 bool keyPress = false;
-char OTAHostname[] = "Sonoff-OTA";
+
 ESP8266WebServer server(80);
 String ChannelName = "";
+
+//WifiManager - don't touch
+bool shouldSaveConfig        = false;
+String configJsonFile        = "config.json";
+bool wifiManagerDebugOutput  = true;
+char ip[15]      = "0.0.0.0";
+char netmask[15] = "0.0.0.0";
+char gw[15]      = "0.0.0.0";
+bool startWifiManager = false;
+
 void setup() {
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT);
 
+  for (int i = 0; i < 20; i++) {
+    if (digitalRead(SwitchPin) == LOW) {
+      startWifiManager = true;
+      break;
+    }
+    digitalWrite(greenLEDPin, HIGH);
+    delay(100);
+    digitalWrite(greenLEDPin, LOW);
+    delay(100);
+  }
+
+  loadSystemConfig();
+
   Serial.begin(9600);
   if (doWifiConnect()) {
     startOTAhandling();
-    if (!setStateCCUCUxD(DeviceIP_Variable, "'" + WiFi.localIP().toString() + "'")) {
-      Serial.println("Error setting Variable " + DeviceIP_Variable);
+    if (!setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'")) {
+      Serial.println("Error setting Variable " + String(DeviceName) + "_IP");
       ESP.restart();
     }
     server.on("/0", switchRelayOff);
@@ -48,16 +69,32 @@ void setup() {
     server.on("/2", toggleRelay);
     server.on("/state", returnRelayState);
     server.begin();
+
+    ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
+    String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
+
+    digitalWrite(greenLEDPin, HIGH);
+
+    if (stateFromCCU == "true") {
+      switchRelayOn();
+    } else {
+      switchRelayOff();
+    }
   }
+}
 
-  ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
-  String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
-
-  if (stateFromCCU == "true") {
-    switchRelayOn();
+void loop() {
+  ArduinoOTA.handle();
+  server.handleClient();
+  if (digitalRead(SwitchPin) == LOW) {
+    if (keyPress == false) {
+      toggleRelay();
+      keyPress = true;
+    }
   } else {
-    switchRelayOff();
+    keyPress = false;
   }
+  delay(10);
 }
 
 void returnRelayState() {
@@ -92,43 +129,7 @@ void toggleRelay() {
   }
 }
 
-void loop() {
-  ArduinoOTA.handle();
-  server.handleClient();
-  if (digitalRead(SwitchPin) == LOW) {
-    if (keyPress == false) {
-      toggleRelay();
-      keyPress = true;
-    }
-  } else {
-    keyPress = false;
-  }
-  delay(10);
-}
-
-bool doWifiConnect() {
-  Serial.println("Connecting WLAN...");
-  WiFi.disconnect();
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, key);
-  int waitCounter = 0;
-  digitalWrite(greenLEDPin, LOW);
-  while (WiFi.status() != WL_CONNECTED) {
-    waitCounter++;
-    if (waitCounter == 20) {
-      digitalWrite(greenLEDPin, HIGH);
-      return false;
-    }
-    delay(500);
-  }
-  digitalWrite(greenLEDPin, HIGH);
-  Serial.println("Wifi Connected");
-  return true;
-}
-
 void blinkLED(int count) {
-  pinMode(greenLEDPin, OUTPUT);
-
   digitalWrite(greenLEDPin, LOW);
   delay(100);
   for (int i = 0; i < count; i++) {
