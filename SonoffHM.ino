@@ -37,7 +37,7 @@ void setup() {
   pinMode(SwitchPin,   INPUT);
 
   Serial.begin(9600);
-  if (doWifiConnect() == true) {
+  if (doWifiConnect()) {
     startOTAhandling();
     if (!setStateCCUCUxD(DeviceIP_Variable, "'" + WiFi.localIP().toString() + "'")) {
       Serial.println("Error setting Variable " + DeviceIP_Variable);
