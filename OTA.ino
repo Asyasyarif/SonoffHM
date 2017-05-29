@@ -1,4 +1,4 @@
-void startOTAhandling() {  
+void startOTAhandling() {
   ArduinoOTA.onStart([]() {
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH)
@@ -23,6 +23,11 @@ void startOTAhandling() {
     else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
     else if (error == OTA_END_ERROR) Serial.println("End Failed");
   });
-  ArduinoOTA.setHostname(OTAHostname);
+
+  String Hostname = "Sonoff-OTA-" + WiFi.macAddress();
+  char a[] = "";
+  Hostname.toCharArray(a, 30);
+
+  ArduinoOTA.setHostname(a);
   ArduinoOTA.begin();
 }
