@@ -3,7 +3,7 @@
   Flash Mode: QIO
   Flash Frequency: 40 MHz
   CPU Frequency: 80 MHz
-  Flash Size: 1M (64K SPIFFS)
+  Flash Size: 1M (256K SPIFFS)
   Debug Port: disabled
   Debug Level: none
   Reset Mode: ck
@@ -12,14 +12,15 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
 #include <ESP8266WebServer.h>
+#include <ArduinoOTA.h>
 
-String ccuIP =          "192.168.1.1";
-String ChannelName =    "CUxD.CUX2801003:1";
-String ise_Sonoff1_IP = "00000";
-String ise_Device =     "00000";
 char ssid[] =           "XXXXXX";
 char key[] =            "XXXXXX";
 
+String ccuIP =          "192.168.1.1";
+String DeviceName =     "Sonoff1";
+
+String DeviceIP_Variable = DeviceName + "_IP";
 
 #define greenLEDPin 13
 #define RelayPin    12
@@ -27,9 +28,9 @@ char key[] =            "XXXXXX";
 
 bool relayState = LOW;
 bool keyPress = false;
-
+char OTAHostname[] = "Sonoff-OTA";
 ESP8266WebServer server(80);
-
+String ChannelName = "";
 void setup() {
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
@@ -37,7 +38,11 @@ void setup() {
 
   Serial.begin(9600);
   if (doWifiConnect() == true) {
-    setStateCCUXMLAPI(ise_Sonoff1_IP, WiFi.localIP().toString());
+    startOTAhandling();
+    if (!setStateCCUCUxD(DeviceIP_Variable, "'" + WiFi.localIP().toString() + "'")) {
+      Serial.println("Error setting Variable " + DeviceIP_Variable);
+      ESP.restart();
+    }
     server.on("/0", switchRelayOff);
     server.on("/1", switchRelayOn);
     server.on("/2", toggleRelay);
@@ -45,7 +50,8 @@ void setup() {
     server.begin();
   }
 
-  String stateFromCCU = getStateFromCCUXMLAPI(ise_Device);
+  ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
+  String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
 
   if (stateFromCCU == "true") {
     switchRelayOn();
@@ -64,7 +70,7 @@ void switchRelayOn() {
   if (digitalRead(RelayPin) != relayState) {
     digitalWrite(RelayPin, relayState);
     digitalWrite(greenLEDPin, !relayState);
-    setStateCCUCUxD(ChannelName, "1");
+    setStateCCUCUxD(ChannelName + ".SET_STATE", "1");
   }
 }
 
@@ -74,7 +80,7 @@ void switchRelayOff() {
   if (digitalRead(RelayPin) != relayState) {
     digitalWrite(RelayPin, relayState);
     digitalWrite(greenLEDPin, !relayState);
-    setStateCCUCUxD(ChannelName,  "0" );
+    setStateCCUCUxD(ChannelName + ".SET_STATE",  "0" );
   }
 }
 
@@ -87,6 +93,7 @@ void toggleRelay() {
 }
 
 void loop() {
+  ArduinoOTA.handle();
   server.handleClient();
   if (digitalRead(SwitchPin) == LOW) {
     if (keyPress == false) {
