@@ -15,15 +15,10 @@
   - eine Systemvariable, in der die IP des Sonoff gespeichert wird, vom Typ "Zeichenkette"
       - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)
   
-In der SonoffHM.ino müssen noch folgende Variablen angepasst werden:
-  - char ssid[] =           "XXXXXX";
-    - die SSID des WLANs
-  - char key[] =            "XXXXXX";
-    - der WPA2-Key des WLANS
-  - String ccuIP =          "192.168.1.1";           
-    - die IP der CCU
-  - String DeviceName =    "Sonoff1";
-    - der Gerätename, des Gerätekanals
+
+Bei Inbetriebnahme des Sonoff blinkt die LED in den ersten 4 Sekunden schnell.
+Wird während dessen der Taster gedrückt, startet automatisch der Konfigurationsmodus.
+Der Sonoff arbeitet dann als AccessPoint. Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite.
 
 
 Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet:
