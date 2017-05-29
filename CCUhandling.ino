@@ -1,48 +1,42 @@
-void setStateCCUCUxD(String id, String value) {
+bool setStateCCUCUxD(String id, String value) {
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
     http.setTimeout(5000);
-    String url = "http://" + ccuIP + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + ".SET_STATE%22).State(" + value + ")";
+    String url = "http://" + ccuIP + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
+    Serial.println("setStateCCU url: " + url);
     http.begin(url);
     int httpCode = http.GET();
+    String payload = "";
+
     if (httpCode > 0) {
       Serial.println("HTTP " + id + " success");
-      String payload = http.getString();
+      payload = http.getString();
     }
     if (httpCode != 200) {
       blinkLED(3);
       Serial.println("HTTP " + id + " fail");
     }
     http.end();
+
+    payload = payload.substring(payload.indexOf("<ret>"));
+    payload = payload.substring(5, payload.indexOf("</ret>"));
+    Serial.println("setStateFromCCUCUxD payload = " + payload);
+
+    return (payload != "null");
+
   } else ESP.restart();
 
 }
 
-void setStateCCUXMLAPI(String ise_id, String value) {
-  if (WiFi.status() == WL_CONNECTED)
-  {
-    HTTPClient http;
-    String url = "http://" + ccuIP + "/config/xmlapi/statechange.cgi?ise_id=" + ise_id + "&new_value=" + value;
-    http.begin(url);
-    int httpCode = http.GET();
-    Serial.println("httpcode = " + String(httpCode));
-    if (httpCode > 0) {
-      //     String payload = http.getString();
-    }
-    if (httpCode != 200) {
-      Serial.println("HTTP fail " + String(httpCode));
-    }
-    http.end();
-  } else ESP.restart();
-}
-
-String getStateFromCCUXMLAPI(String ise_id) {
+String getStateFromCCUCUxD(String id, String type) {
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
     http.setTimeout(5000);
-    http.begin("http://" + ccuIP + "/config/xmlapi/state.cgi?datapoint_id=" + ise_id);
+    String url = "http://" + ccuIP + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
+    Serial.println("getStateCCU url: " + url);
+    http.begin(url);
     int httpCode = http.GET();
     String payload = "error";
     if (httpCode > 0) {
@@ -50,15 +44,13 @@ String getStateFromCCUXMLAPI(String ise_id) {
     }
     if (httpCode != 200) {
       blinkLED(3);
-      Serial.println("HTTP " + ise_id + " fail");
+      Serial.println("HTTP " + id + " fail");
     }
     http.end();
 
-
-    payload = payload.substring(payload.indexOf("value='"));
-    payload = payload.substring(7, payload.indexOf("'/>"));
-
+    payload = payload.substring(payload.indexOf("<ret>"));
+    payload = payload.substring(5, payload.indexOf("</ret>"));
+    Serial.println("getStateFromCCUCUxD payload = " + payload);
     return payload;
   } else ESP.restart();
-
 }
