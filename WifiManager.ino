@@ -1,11 +1,18 @@
 bool doWifiConnect() {
+  String _ssid = WiFi.SSID();
+  String _psk = WiFi.psk();
+
+  const char* ipStr = ip; byte ipBytes[4]; parseBytes(ipStr, '.', ipBytes, 4, 10);
+  const char* netmaskStr = netmask; byte netmaskBytes[4]; parseBytes(netmaskStr, '.', netmaskBytes, 4, 10);
+  const char* gwStr = gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
+
   WiFiManager wifiManager;
   digitalWrite(greenLEDPin, LOW);
   wifiManager.setDebugOutput(wifiManagerDebugOutput);
   wifiManager.setAPCallback(configModeCallback);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
-  WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", "", 15);
-  WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", "", 20);
+  WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", ccuIP, 15);
+  WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", DeviceName, 20);
 
   WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", "", 15);
   WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", "", 15);
@@ -18,18 +25,24 @@ bool doWifiConnect() {
   wifiManager.addParameter(&custom_netmask);
   wifiManager.addParameter(&custom_gw);
 
-  if (startWifiManager == true) {
-    wifiManager.resetSettings();
-  }
-  const char* ipStr = ip; byte ipBytes[4]; parseBytes(ipStr, '.', ipBytes, 4, 10);
-  const char* netmaskStr = netmask; byte netmaskBytes[4]; parseBytes(netmaskStr, '.', netmaskBytes, 4, 10);
-  const char* gwStr = gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
-
-  wifiManager.setSTAStaticIPConfig(IPAddress(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), IPAddress(gwBytes[0], gwBytes[1], gwBytes[2], gwBytes[3]), IPAddress(netmaskBytes[0], netmaskBytes[1], netmaskBytes[2], netmaskBytes[3]));
-
   String Hostname = "Sonoff-" + WiFi.macAddress();
   char a[] = "";
   Hostname.toCharArray(a, 30);
+
+  if (startWifiManager == true) {
+    if (_ssid == "" || _psk == "" ) {
+      wifiManager.resetSettings();
+    }
+    else {
+      if (!wifiManager.startConfigPortal(a)) {
+        Serial.println("failed to connect and hit timeout");
+        delay(1000);
+        ESP.restart();
+      }
+    }
+  }
+
+  wifiManager.setSTAStaticIPConfig(IPAddress(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), IPAddress(gwBytes[0], gwBytes[1], gwBytes[2], gwBytes[3]), IPAddress(netmaskBytes[0], netmaskBytes[1], netmaskBytes[2], netmaskBytes[3]));
 
   wifiManager.autoConnect(a);
 
