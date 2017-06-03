@@ -1,3 +1,0 @@
-[submodule "libraries/ESP8266HTTPClient"]
-	path = libraries/ESP8266HTTPClient
-	url = https://github.com/esp8266/Arduino/
