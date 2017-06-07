@@ -31,7 +31,6 @@ dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/ad
   ```string sonoffip = dom.GetObject(dom.GetObject(((dom.GetObject("$src$")).Channel()))#"_IP").Value();
 dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoffip#"/1")```
 
-- wobei "Sonoff1_IP" der Name der Variable ist, die unter 1. erstellt wurde
 
 # Flashen der Firmware
 
