@@ -54,3 +54,4 @@ String getStateFromCCUCUxD(String id, String type) {
     return payload;
   } else ESP.restart();
 }
+
