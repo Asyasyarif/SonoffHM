@@ -20,7 +20,7 @@ Wird während dessen der Taster *kurz* gedrückt, startet automatisch der Konfig
 Der Sonoff arbeitet dann als AccessPoint. 
 Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite.
 
-Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet:
+Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet (siehe CCU_Programm_SonoffSchalten.png):
 - WENN: Geräteauswahl [das CUxD-Device] "bei Schaltzustand: ein" "bei Änderung auslösen"
 - DANN: Skript:
 
