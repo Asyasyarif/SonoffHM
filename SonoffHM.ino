@@ -17,7 +17,7 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-char ccuIP[15]      = "0.0.0.0";
+char ccuIP[15]      = "";
 char DeviceName[20] = "";
 
 #define greenLEDPin 13
