@@ -46,11 +46,11 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
 - DANN: Skript:
 
   ```string sonoffip = dom.GetObject(dom.GetObject(((dom.GetObject("$src$")).Channel()))#"_IP").Value();
-dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoffip#"/1");```
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s http://"#sonoffip#"/1");```
 - SONST: Skript:
 
   ```string sonoffip = dom.GetObject(dom.GetObject(((dom.GetObject("$src$")).Channel()))#"_IP").Value();
-dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoffip#"/0")```
+dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s http://"#sonoffip#"/0")```
 
 # Variante 2
 Schritte 1 bis 3 sind identisch wie in Variante 1. Theoretisch könnten wir die Variable weglassen, jedoch wird der Sonoff immer versuchen seine IP Adresse in die Variable zu schreiben. Wenn er die Variable nicht findet kann dies unter Umständen zu Fehlern im Log führen. Daher lassen wir dei Variable besser bestehen.
@@ -60,10 +60,10 @@ Schritte 1 bis 3 sind identisch wie in Variante 1. Theoretisch könnten wir die 
   Wechsel zur Oberfläche der CCU. Hier rufen wir Einstellung - Geräte auf und gehen in die Einstellung des Geräts/Kanals "Sonoff1".
   Dort wird in "SWITCH|CMD_LONG" der Einschaltbefehl eingetragen:
   
-  ```/usr/local/addons/cuxd/curl -s -k http://{ip-des-sonoff}/1```
+  ```/usr/local/addons/cuxd/curl -s http://{ip-des-sonoff}/1```
   
   Unter "SWITCH|CMD_SHORT" wird der Ausschaltbefehl eingetragen:
   
-  ```/usr/local/addons/cuxd/curl -s -k http://{ip-des-sonoff}/0```
+  ```/usr/local/addons/cuxd/curl -s http://{ip-des-sonoff}/0```
  
   Abschließend mit OK speichern und jetzt kann das Sonoff Gerät über die Homematic Oberfläche geschaltet werden.
