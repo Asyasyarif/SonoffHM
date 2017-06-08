@@ -20,9 +20,9 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
   - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'Sonoff.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe)
   esptool.exe -vv -cd ck -cb 115200 -cp *COMPort* -ca 0x00000 -cf Sonoff.ino.generic.bin
 
-  **Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
+    **Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
 
-  Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) flashen.
+    Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen.
 
 **3.) Einrichtung des Sonoff Devices**
 
@@ -35,7 +35,7 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
   - WLAN-Key
   - IP der CCU (Das Feld ist durch die IP 0.0.0.0 vorbelegt)
   - Name des Sonoff Geräts - 
-    **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.** Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
+    **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.**    Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
   - statische IP Adresse (optional)
   
 **4.) Einrichtung der Steurung**
@@ -65,3 +65,4 @@ Schritte 1 bis 3 sind identisch wie in Variante 1. Theoretisch könnten wir die 
   
   ```/usr/local/addons/cuxd/curl -s -k http://{ip-des-sonoff}/0```
  
+  Abschließend mit OK speichern und jetzt kann das Sonoff Gerät über die Homematic Oberfläche geschaltet werden.
