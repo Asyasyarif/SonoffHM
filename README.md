@@ -18,6 +18,7 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
 
 **2.) Flashen des Sonoff Devices** 
   - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'Sonoff.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe)
+  
   esptool.exe -vv -cd ck -cb 115200 -cp *COMPort* -ca 0x00000 -cf Sonoff.ino.generic.bin
 
     **Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
