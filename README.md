@@ -1,5 +1,7 @@
 # SonoffHM
+Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic gesteuert werden kann. Die erste Variante wird benötigt wenn das Sonoff Device eine DHCP Adresse bezieht und keine Adressreservierung im Router eingetragen wird. An dieser Stelle wird die IP Adresse des Sonoff Devices von diesem automatisch in eine Variable in der CCU geschrieben. Das Ein- bzw. Ausschalten erfolgt dann über ein Skript, welches die Variable aufruft und die IP ausliest. Bei der zweiten Variante wird der Befehl zum Ein- und Ausschalten direkt fix im Device eingetragen. Das funktioniert jedoch nur, wenn die IP fest eingestellt ist oder wie bereits erwähnt, eine IP-Reservierung im Router eingetragen wurde, damit das Gerät immer die gleiche IP Adresse zugewiesen bekommt.
 
+# Variante 1
 **1.) Voraussetzungen:** 
   - installiertes CUxD-Addon auf der CCU
   - ein CUxD Exec-Device (was in den meisten Fällen wohl schon existiert)
@@ -11,7 +13,7 @@
     - Control = Schalter
     - Name = Sonoff    
   - es wird anschließend in der WebUI ein Gerät namens "Sonoff" mit 16 Kanälen erzeugt. Den ersten Kanal benenennt man um, zB in "Sonoff1". Die restlichen Kanäle kann man in der Einstellung des Geräts deaktivieren, das dient der Übersichtlichkeit.
-  - eine Systemvariable, in der die IP des Sonoff gespeichert wird, vom Typ "Zeichenkette"
+  - eine Systemvariable, in der die IP des Sonoff gespeichert wird, vom Typ "Zeichenkette". 
       - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)
 
 **2.) Flashen des Sonoff Devices** 
@@ -27,13 +29,13 @@
   **Bei Inbetriebnahme des Sonoff blinkt die LED in den ersten 4 Sekunden schnell.
   Wird während dessen der Taster *kurz* gedrückt, startet automatisch der Konfigurationsmodus.**
   Der Sonoff arbeitet dann als AccessPoint. 
-  Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite. Sollte die Seite nicht automatisch geöffnet werden ruft die IP 192.168.4.1 im Browser auf.
+  Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite. Sollte die Seite nicht automatisch geöffnet werden einfach die IP 192.168.4.1 im Browser aufrufen.
   Auf der Konfigurationsseite müssen nun folgende Parameter konfiguriert werden:
   - SSID / WLAN Netzwerkname zu dem sich der Sonoff verbinden soll. Sollte der Netzwerkname unbekannt sein, kann man auf der Seite auch einen Scan ausführen lassen und das erkannte WLAN auswählen.
   - WLAN-Key
   - IP der CCU (Das Feld ist durch die IP 0.0.0.0 vorbelegt)
-  - Name des Sonoff Geräts
-**Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices übereinstimmen**
+  - Name des Sonoff Geräts - 
+    **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.** Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
   - statische IP Adresse (optional)
   
 **4.) Einrichtung der Steurung**
@@ -48,3 +50,18 @@ dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/ad
 
   ```string sonoffip = dom.GetObject(dom.GetObject(((dom.GetObject("$src$")).Channel()))#"_IP").Value();
 dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("LD_LIBRARY_PATH=/usr/local/addons/cuxd /usr/local/addons/cuxd/curl -s -k http://"#sonoffip#"/0")```
+
+# Variante 2
+Schritte 1 bis 3 sind identisch wie in Variante 1. Theoretisch könnten wir die Variable weglassen, jedoch wird der Sonoff immer versuchen seine IP Adresse in die Variable zu schreiben. Wenn er die Variable nicht findet kann dies unter Umständen zu Fehlern im Log führen. Daher lassen wir dei Variable besser bestehen.
+
+**4.) Einrichtung der Steurung**
+
+  Wechsel zur Oberfläche der CCU. Hier rufen wir Einstellung - Geräte auf und gehen in die Einstellung des Geräts/Kanals "Sonoff1".
+  Dort wird in "SWITCH|CMD_LONG" der Einschaltbefehl eingetragen:
+  
+  ```/usr/local/addons/cuxd/curl -s -k http://{ip-des-sonoff}/1```
+  
+  Unter "SWITCH|CMD_SHORT" wird der Ausschaltbefehl eingetragen:
+  
+  ```/usr/local/addons/cuxd/curl -s -k http://{ip-des-sonoff}/0```
+ 
