@@ -20,12 +20,14 @@
 char ccuIP[15]      = "";
 char DeviceName[20] = "";
 
-#define greenLEDPin 13
-#define RelayPin    12
-#define SwitchPin   0
+#define greenLEDPin     13
+#define RelayPin        12
+#define SwitchPin       0
+#define MillisKeyBounce 500  //Millisekunden zwischen 2xtasten
 
-bool relayState = LOW;
-bool keyPress = false;
+bool RelayState = LOW;
+bool KeyPress = false;
+unsigned long LastMillisKeyPress = 0;
 
 ESP8266WebServer server(80);
 String ChannelName = "";
@@ -33,7 +35,7 @@ String ChannelName = "";
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
-bool wifiManagerDebugOutput  = true;
+#define wifiManagerDebugOutput   true
 char ip[15]      = "0.0.0.0";
 char netmask[15] = "0.0.0.0";
 char gw[15]      = "0.0.0.0";
@@ -88,13 +90,14 @@ void setup() {
 void loop() {
   ArduinoOTA.handle();
   server.handleClient();
-  if (digitalRead(SwitchPin) == LOW) {
-    if (keyPress == false) {
+  if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
+    LastMillisKeyPress = millis();
+    if (KeyPress == false) {
       toggleRelay();
-      keyPress = true;
+      KeyPress = true;
     }
   } else {
-    keyPress = false;
+    KeyPress = false;
   }
   delay(50);
 }
@@ -104,21 +107,21 @@ void returnRelayState() {
 }
 
 void switchRelayOn() {
-  relayState = HIGH;
+  RelayState = HIGH;
   server.send(200, "text/html", "On OK");
-  if (digitalRead(RelayPin) != relayState) {
-    digitalWrite(RelayPin, relayState);
-    digitalWrite(greenLEDPin, !relayState);
+  if (digitalRead(RelayPin) != RelayState) {
+    digitalWrite(RelayPin, RelayState);
+    digitalWrite(greenLEDPin, !RelayState);
     setStateCCUCUxD(ChannelName + ".SET_STATE", "1");
   }
 }
 
 void switchRelayOff() {
-  relayState = LOW;
+  RelayState = LOW;
   server.send(200, "text/html", "Off OK");
-  if (digitalRead(RelayPin) != relayState) {
-    digitalWrite(RelayPin, relayState);
-    digitalWrite(greenLEDPin, !relayState);
+  if (digitalRead(RelayPin) != RelayState) {
+    digitalWrite(RelayPin, RelayState);
+    digitalWrite(greenLEDPin, !RelayState);
     setStateCCUCUxD(ChannelName + ".SET_STATE",  "0" );
   }
 }
