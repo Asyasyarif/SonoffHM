@@ -111,6 +111,19 @@ void parseBytes(const char* str, char sep, byte* bytes, int maxBytes, int base) 
   }
 }
 
+void printWifiStatus() {
+  Serial.println("WLAN Info:");
+  Serial.print("SSID: ");
+  Serial.println(WiFi.SSID());
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
+  long rssi = WiFi.RSSI();
+  Serial.print("signal strength (RSSI):");
+  Serial.print(rssi);
+  Serial.println(" dBm");
+}
+
 bool loadSystemConfig() {
   //read configuration from FS json
   Serial.println("mounting FS...");

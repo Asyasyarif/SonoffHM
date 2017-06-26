@@ -63,29 +63,32 @@ void setup() {
   loadSystemConfig();
 
   if (doWifiConnect()) {
+    Serial.println("WLAN erfolgreich verbunden!");
+    printWifiStatus();
     if (!setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'")) {
       Serial.println("Error setting Variable " + String(DeviceName) + "_IP");
       ESP.restart();
     }
-    server.on("/0", switchRelayOff);
-    server.on("/1", switchRelayOn);
-    server.on("/2", toggleRelay);
-    server.on("/state", returnRelayState);
-    server.begin();
+  } else ESP.restart();
+  server.on("/0", switchRelayOff);
+  server.on("/1", switchRelayOn);
+  server.on("/2", toggleRelay);
+  server.on("/state", returnRelayState);
+  server.begin();
 
-    ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
-    String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
+  ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
+  String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
 
-    digitalWrite(greenLEDPin, HIGH);
+  digitalWrite(greenLEDPin, HIGH);
 
-    if (stateFromCCU == "true") {
-      switchRelayOn();
-    } else {
-      switchRelayOff();
-    }
-    startOTAhandling();
+  if (stateFromCCU == "true") {
+    switchRelayOn();
+  } else {
+    switchRelayOff();
   }
+  startOTAhandling();
 }
+
 
 void loop() {
   ArduinoOTA.handle();
