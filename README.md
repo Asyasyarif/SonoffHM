@@ -17,13 +17,15 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
       - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)
 
 **2.) Flashen des Sonoff Devices** 
-  - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe)
+  - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe) für Windows-Nutzer. Plattformunabhängig kann das Python Package [esptool](https://pypi.python.org/pypi/esptool/) genutzt werden 
   
   esptool.exe -vv -cd ck -cb 115200 -cp *COMPort* -ca 0x00000 -cf SonoffHM.ino.generic.bin
 
-    **Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
+**Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
 
-    Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen.
+Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen. [Link zu espota](https://github.com/esp8266/Arduino/tree/master/tools)
+    
+    espota.py -i *IP* -p 8266 --auth= -f SonoffHM.ino.generic.bin 
 
 **3.) Einrichtung des Sonoff Devices**
 
