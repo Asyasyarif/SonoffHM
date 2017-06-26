@@ -11,12 +11,12 @@ bool doWifiConnect() {
   wifiManager.setDebugOutput(wifiManagerDebugOutput);
   wifiManager.setAPCallback(configModeCallback);
   wifiManager.setSaveConfigCallback(saveConfigCallback);
-  WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", ccuIP, 15);
-  WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", DeviceName, 20);
+  WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", ccuIP, 16);
+  WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", DeviceName, 50);
 
-  WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", "", 15);
-  WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", "", 15);
-  WiFiManagerParameter custom_gw("custom_gw", "Gateway", "", 15);
+  WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", "", 16);
+  WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", "", 16);
+  WiFiManagerParameter custom_gw("custom_gw", "Gateway", "", 16);
   WiFiManagerParameter custom_text("<br/><br>Statische IP (wenn leer, dann DHCP):");
   wifiManager.addParameter(&custom_ccuip);
   wifiManager.addParameter(&custom_sonoffname);

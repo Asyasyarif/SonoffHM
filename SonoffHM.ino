@@ -17,8 +17,8 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-char ccuIP[15]      = "";
-char DeviceName[20] = "";
+char ccuIP[16]      = "";
+char DeviceName[50] = "";
 
 #define greenLEDPin     13
 #define RelayPin        12
@@ -36,9 +36,9 @@ String ChannelName = "";
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
 #define wifiManagerDebugOutput   true
-char ip[15]      = "0.0.0.0";
-char netmask[15] = "0.0.0.0";
-char gw[15]      = "0.0.0.0";
+char ip[16]      = "0.0.0.0";
+char netmask[16] = "0.0.0.0";
+char gw[16]      = "0.0.0.0";
 bool startWifiManager = false;
 
 void setup() {
