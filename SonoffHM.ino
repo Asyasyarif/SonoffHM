@@ -20,10 +20,11 @@
 char ccuIP[16]      = "";
 char DeviceName[50] = "";
 
-#define greenLEDPin     13
-#define RelayPin        12
-#define SwitchPin       0
-#define MillisKeyBounce 500  //Millisekunden zwischen 2xtasten
+#define greenLEDPin          13
+#define RelayPin             12
+#define SwitchPin             0
+#define MillisKeyBounce     500  //Millisekunden zwischen 2xtasten
+#define WifiManagerTimeout  180  //Timeout des AccessPoint-Modus
 
 bool RelayState = LOW;
 bool KeyPress = false;
@@ -35,14 +36,14 @@ String ChannelName = "";
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
-#define wifiManagerDebugOutput   true
+#define wifiManagerDebugOutput   false
 char ip[16]      = "0.0.0.0";
 char netmask[16] = "0.0.0.0";
 char gw[16]      = "0.0.0.0";
 bool startWifiManager = false;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Sonoff startet...");
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
