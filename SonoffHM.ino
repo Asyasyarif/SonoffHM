@@ -20,11 +20,11 @@
 char ccuIP[16]      = "";
 char DeviceName[50] = "";
 
-#define greenLEDPin          13
-#define RelayPin             12
-#define SwitchPin             0
-#define MillisKeyBounce     500  //Millisekunden zwischen 2xtasten
-#define WifiManagerTimeout  180  //Timeout des AccessPoint-Modus
+#define greenLEDPin           13
+#define RelayPin              12
+#define SwitchPin              0
+#define MillisKeyBounce      500  //Millisekunden zwischen 2xtasten
+#define ConfigPortalTimeout  180  //Timeout des AccessPoint-Modus
 
 bool RelayState = LOW;
 bool KeyPress = false;
