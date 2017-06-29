@@ -25,7 +25,7 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
 
 Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen. [Link zu espota](https://github.com/esp8266/Arduino/tree/master/tools)
     
-    espota.py -i *IP* -p 8266 --auth= -f SonoffHM.ino.generic.bin 
+    espota.py -i *IP* -f SonoffHM.ino.generic.bin 
 
 **3.) Einrichtung des Sonoff Devices**
 
