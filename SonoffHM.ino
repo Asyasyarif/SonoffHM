@@ -47,7 +47,7 @@ void setup() {
   Serial.println("Sonoff startet...");
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
-  pinMode(SwitchPin,   INPUT);
+  pinMode(SwitchPin,   INPUT_PULLUP);
 
   for (int i = 0; i < 20; i++) {
     if (digitalRead(SwitchPin) == LOW) {
@@ -97,6 +97,7 @@ void loop() {
   if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
     LastMillisKeyPress = millis();
     if (KeyPress == false) {
+      setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'");
       toggleRelay();
       KeyPress = true;
     }
