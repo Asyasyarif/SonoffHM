@@ -16,8 +16,12 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
   - eine Systemvariable, in der die IP des Sonoff gespeichert wird, vom Typ "Zeichenkette". 
       - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)_
   ![sysvar](Images/CCU_Systemvariable.png)    
+  
   ![cuxddev](Images/CCU_CUxD_sonoff_anlegen.png)    
-  ![cuxddevname](Images/CCU_Geraetebenennung.png)    
+  
+  ![cuxddevname](Images/CCU_Geraetebenennung.png)  
+  
+  ![ccusystemvar](Images/CCU_Systemvariable.png)    
 
 
 
