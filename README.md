@@ -14,7 +14,12 @@ Es werden hier zwei Varianten vorgestellt wie das Sonoff Device über Homematic 
     - Name = Sonoff    
   - es wird anschließend in der WebUI ein Gerät namens "Sonoff" mit 16 Kanälen erzeugt. Den ersten Kanal benenennt man um, zB in "Sonoff1". Die restlichen Kanäle kann man in der Einstellung des Geräts deaktivieren, das dient der Übersichtlichkeit.
   - eine Systemvariable, in der die IP des Sonoff gespeichert wird, vom Typ "Zeichenkette". 
-      - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)
+      - als Namen wählt man 'GeräteName'_IP; Beispiel: Sonoff1_IP ('GeräteName' = der Name des Sonoff-Kanals des CUxD Devices)_
+  ![sysvar](Images/CCU_Systemvariable.png)    
+  ![cuxddev](Images/CCU_CUxD_sonoff_anlegen.png)    
+  ![cuxddevname](Images/CCU_Geraetebenennung.png)    
+
+
 
 **2.) Flashen des Sonoff Devices** 
   - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe) für Windows-Nutzer. Plattformunabhängig kann das Python Package [esptool](https://pypi.python.org/pypi/esptool/) genutzt werden 
@@ -32,7 +37,10 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   **Bei Inbetriebnahme des Sonoff blinkt die LED in den ersten 4 Sekunden schnell.
   Wird während dessen der Taster *kurz* gedrückt, startet automatisch der Konfigurationsmodus.**
   Der Sonoff arbeitet dann als AccessPoint. 
+  ![config1](Images/Sonoff-ConfigMode1.png)
   Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite. Sollte die Seite nicht automatisch geöffnet werden einfach die IP 192.168.4.1 im Browser aufrufen.
+    ![config2](Images/Sonoff-ConfigMode2.png)
+
   Auf der Konfigurationsseite müssen nun folgende Parameter konfiguriert werden:
   - SSID / WLAN Netzwerkname zu dem sich der Sonoff verbinden soll. Sollte der Netzwerkname unbekannt sein, kann man auf der Seite auch einen Scan ausführen lassen und das erkannte WLAN auswählen.
   - WLAN-Key
@@ -40,10 +48,14 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   - Name des Sonoff Geräts - 
     **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.**    Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
   - statische IP Adresse (optional)
+      ![config3](Images/Sonoff-ConfigMode3.png)
+
   
 **4.) Einrichtung der Steurung**
 
-  Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet (siehe CCU_Programm_SonoffSchalten.png).
+  Zum Schluss benötigen wir noch ein kleines Programm, dass den Schaltbefehl an den Sonoff sendet.
+  ![schalten](Images/CCU_Programm_SonoffSchalten.png)
+
 - WENN: Geräteauswahl [das CUxD-Device] "bei Schaltzustand: ein" "bei Änderung auslösen"
 - DANN: Skript:
 
