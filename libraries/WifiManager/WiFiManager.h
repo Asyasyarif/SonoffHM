@@ -29,10 +29,13 @@ const char HTTP_HEAD_END[] PROGMEM        = "</head><body><div style='text-align
 const char HTTP_PORTAL_OPTIONS[] PROGMEM  = "<form action=\"/wifi\" method=\"get\"><button>WLAN konfigurieren</button></form><br/><form action=\"/0wifi\" method=\"get\"><button>WLAN konfigurieren (ohne Scan)</button></form><br/><form action=\"/i\" method=\"get\"><button>Info</button></form><br/><form action=\"/r\" method=\"post\"><button>Reset</button></form>";
 const char HTTP_ITEM[] PROGMEM            = "<div><a href='#p' onclick='c(this)'>{v}</a>&nbsp;<span class='q {i}'>{r}%</span></div>";
 const char HTTP_FORM_START[] PROGMEM      = "<form method='get' action='wifisave'><input id='s' name='s' length=32 placeholder='SSID'><br/><input id='p' name='p' length=64 type='password' placeholder='WLAN-Key'><br/>";
-const char HTTP_FORM_PARAM[] PROGMEM      = "<br/><input id='{i}' name='{n}' length={l} placeholder='{p}' value='{v}' {c}>";
+const char HTTP_FORM_PARAM_INPUT[] PROGMEM= "<br/><input id='{i}' name='{n}' length={l} placeholder='{p}' value='{v}' {c}>";
+const char HTTP_FORM_PARAM_COB[] PROGMEM   = "<br/>{p}<select name=\"{i}\"> {c} </select>";
+const char HTTP_FORM_PARAM_CKB[] PROGMEM   = "<br/>{p}&nbsp;<input id='{i}' type=\"checkbox\" name='{n}' {v} value=1>";
+
 const char HTTP_FORM_END[] PROGMEM        = "<br/><button type='submit'>Speichern</button></form>";
 const char HTTP_SCAN_LINK[] PROGMEM       = "<br/><div class=\"c\"><a href=\"/wifi\">Scan</a></div>";
-const char HTTP_SAVED[] PROGMEM           = "<div>Daten gespeichert<br/>Netzwerkverbindung wird hergestellt.<br/><br/>Bei Fehler bitte nochmals mit dem AP verbinden!</div>";
+const char HTTP_SAVED[] PROGMEM           = "<div>Daten gespeichert!<br/>Netzwerkverbindung wird hergestellt.<br/><br/>Bei Fehler bitte nochmals mit dem AP verbinden!</div>";
 const char HTTP_END[] PROGMEM             = "</div></body></html>";
 
 #define WIFI_MANAGER_MAX_PARAMS 10
@@ -41,21 +44,24 @@ class WiFiManagerParameter {
   public:
     WiFiManagerParameter(const char *custom);
     WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length);
-    WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom);
+    WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, byte type);
+    WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, byte type, const char *custom);
 
     const char *getID();
     const char *getValue();
     const char *getPlaceholder();
     int         getValueLength();
+    byte        getType();
     const char *getCustomHTML();
   private:
     const char *_id;
     const char *_placeholder;
     char       *_value;
     int         _length;
+    byte        _type;
     const char *_customHTML;
 
-    void init(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom);
+    void init(const char *id, const char *placeholder, const char *defaultValue, int length, byte type, const char *custom);
 
     friend class WiFiManager;
 };

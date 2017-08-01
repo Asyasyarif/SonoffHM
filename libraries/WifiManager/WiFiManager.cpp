@@ -17,22 +17,25 @@ WiFiManagerParameter::WiFiManagerParameter(const char *custom) {
   _placeholder = NULL;
   _length = 0;
   _value = NULL;
-
+  _type = 0;
   _customHTML = custom;
 }
 
 WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length) {
-  init(id, placeholder, defaultValue, length, "");
+  init(id, placeholder, defaultValue, length, 0, "");
 }
 
-WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom) {
-  init(id, placeholder, defaultValue, length, custom);
+WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, byte type) {
+  init(id, placeholder, defaultValue, length, type, "");
 }
-
-void WiFiManagerParameter::init(const char *id, const char *placeholder, const char *defaultValue, int length, const char *custom) {
+WiFiManagerParameter::WiFiManagerParameter(const char *id, const char *placeholder, const char *defaultValue, int length, byte type, const char *custom) {
+    init(id, placeholder, defaultValue, length, type, custom);
+}
+void WiFiManagerParameter::init(const char *id, const char *placeholder, const char *defaultValue, int length, byte type, const char *custom) {
   _id = id;
   _placeholder = placeholder;
   _length = length;
+  _type = type;
   _value = new char[length + 1];
   for (int i = 0; i < length; i++) {
     _value[i] = 0;
@@ -58,6 +61,9 @@ int WiFiManagerParameter::getValueLength() {
 }
 const char* WiFiManagerParameter::getCustomHTML() {
   return _customHTML;
+}
+byte WiFiManagerParameter::getType() {
+    return _type;
 }
 
 WiFiManager::WiFiManager() {
@@ -394,6 +400,7 @@ void WiFiManager::handleRoot() {
   page += FPSTR(HTTP_PORTAL_OPTIONS);
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
 }
@@ -491,63 +498,59 @@ void WiFiManager::handleWifi(boolean scan) {
       break;
     }
 
-    String pitem = FPSTR(HTTP_FORM_PARAM);
-    if (_params[i]->getID() != NULL) {
-      pitem.replace("{i}", _params[i]->getID());
-      pitem.replace("{n}", _params[i]->getID());
-      pitem.replace("{p}", _params[i]->getPlaceholder());
-      snprintf(parLength, 2, "%d", _params[i]->getValueLength());
-      pitem.replace("{l}", parLength);
-      pitem.replace("{v}", _params[i]->getValue());
-      pitem.replace("{c}", _params[i]->getCustomHTML());
-    } else {
-      pitem = _params[i]->getCustomHTML();
+    if (_params[i]->getType() == 0) {
+        String pitem = FPSTR(HTTP_FORM_PARAM_INPUT);
+        if (_params[i]->getID() != NULL) {
+            pitem.replace("{i}", _params[i]->getID());
+            pitem.replace("{n}", _params[i]->getID());
+            pitem.replace("{p}", _params[i]->getPlaceholder());
+            snprintf(parLength, 2, "%d", _params[i]->getValueLength());
+            pitem.replace("{l}", parLength);
+            pitem.replace("{v}", _params[i]->getValue());
+            pitem.replace("{c}", _params[i]->getCustomHTML());
+        }  else {
+            pitem = _params[i]->getCustomHTML();
+        }
+        page += pitem;
+      }
+    if (_params[i]->getType() == 1) {
+        String pitem = FPSTR(HTTP_FORM_PARAM_CKB);
+        pitem.replace("{i}", _params[i]->getID());
+        pitem.replace("{n}", _params[i]->getID());
+        pitem.replace("{p}", _params[i]->getPlaceholder());
+        snprintf(parLength, 2, "%d", _params[i]->getValueLength());
+        pitem.replace("{l}", parLength);
+        if (atoi(_params[i]->getValue()) == 1) {
+            pitem.replace("{v}", "checked");
+        } else {
+            pitem.replace("{v}", "");
+        }
+        pitem.replace("{c}", _params[i]->getCustomHTML());
+        page += pitem;
     }
-
-    page += pitem;
+    if (_params[i]->getType() == 2) {
+        String pitem = FPSTR(HTTP_FORM_PARAM_COB);
+        pitem.replace("{i}", _params[i]->getID());
+        pitem.replace("{n}", _params[i]->getID());
+        pitem.replace("{p}", _params[i]->getPlaceholder());
+        snprintf(parLength, 2, "%d", _params[i]->getValueLength());
+        pitem.replace("{l}", parLength);
+        pitem.replace("{v}", _params[i]->getValue());
+        pitem.replace("{c}", _params[i]->getCustomHTML());
+        page += pitem;
+    }
   }
+    
   if (_params[0] != NULL) {
     page += "<br/>";
   }
 
-/*
-  if (_sta_static_ip) {
-
-    String item = FPSTR(HTTP_FORM_PARAM);
-    item.replace("{i}", "ip");
-    item.replace("{n}", "ip");
-    item.replace("{p}", "Static IP");
-    item.replace("{l}", "15");
-    item.replace("{v}", _sta_static_ip.toString());
-
-    page += item;
-
-    item = FPSTR(HTTP_FORM_PARAM);
-    item.replace("{i}", "gw");
-    item.replace("{n}", "gw");
-    item.replace("{p}", "Static Gateway");
-    item.replace("{l}", "15");
-    item.replace("{v}", _sta_static_gw.toString());
-
-    page += item;
-
-    item = FPSTR(HTTP_FORM_PARAM);
-    item.replace("{i}", "sn");
-    item.replace("{n}", "sn");
-    item.replace("{p}", "Subnet");
-    item.replace("{l}", "15");
-    item.replace("{v}", _sta_static_sn.toString());
-
-    page += item;
-
-    page += "<br/>";
-  }
-*/
   page += FPSTR(HTTP_FORM_END);
   page += FPSTR(HTTP_SCAN_LINK);
 
   page += FPSTR(HTTP_END);
 
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
 
@@ -562,13 +565,18 @@ void WiFiManager::handleWifiSave() {
   _ssid = server->arg("s").c_str();
   _pass = server->arg("p").c_str();
 
-  //parameters
+//for (int i = 0; i < server->args(); i++) {
+//    DEBUG_WM(server->argName(i)); //Get the name of the parameter
+//    DEBUG_WM(server->arg(i));
+//}
+    //parameters
   for (int i = 0; i < _paramsCount; i++) {
     if (_params[i] == NULL) {
       break;
     }
     //read parameter
     String value = server->arg(_params[i]->getID()).c_str();
+      
     //store it in array
     value.toCharArray(_params[i]->_value, _params[i]->_length);
     DEBUG_WM(F("Parameter"));
@@ -664,6 +672,7 @@ void WiFiManager::handleReset() {
   page += FPSTR(HTTP_HEAD_END);
   page += F("Module will reset in a few seconds.");
   page += FPSTR(HTTP_END);
+  server->sendHeader("Content-Length", String(page.length()));
   server->send(200, "text/html", page);
 
   DEBUG_WM(F("Sent reset page"));
@@ -702,6 +711,7 @@ void WiFiManager::handleNotFound() {
   server->sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   server->sendHeader("Pragma", "no-cache");
   server->sendHeader("Expires", "-1");
+  server->sendHeader("Content-Length", String(message.length()));    
   server->send ( 404, "text/plain", message );
 }
 
