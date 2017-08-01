@@ -69,10 +69,6 @@ void setup() {
   if (doWifiConnect()) {
     Serial.println("WLAN erfolgreich verbunden!");
     printWifiStatus();
-    if (!setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'")) {
-      Serial.println("Error setting Variable " + String(DeviceName) + "_IP");
-      ESP.restart();
-    }
   } else ESP.restart();
   server.on("/0", webSwitchRelayOff);
   server.on("/1", webSwitchRelayOn);
@@ -105,7 +101,6 @@ void loop() {
   if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
     LastMillisKeyPress = millis();
     if (KeyPress == false) {
-      setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'");
       TimerSeconds = 0;
       toggleRelay();
       KeyPress = true;
@@ -123,7 +118,7 @@ void loop() {
 }
 
 void returnRelayState() {
-  server.send(200, "text/plain", "<state>"+String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0)+"</timer>");
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</timer>");
 }
 
 void webSwitchRelayOff() {
@@ -138,16 +133,18 @@ void webSwitchRelayOn() {
         TimerSeconds = server.arg(i).toInt();
         if (TimerSeconds > 0) {
           TimerStartMillis = millis();
-          Serial.println("Timer aktiviert, Sekunden: " + String(TimerSeconds));
+          Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
         }
       }
     }
   } else {
     TimerSeconds = 0;
+    Serial.println("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0");
   }
 }
 
 void switchRelayOn() {
+  Serial.println("switchRelayOn()");
   RelayState = HIGH;
   server.send(200, "text/plain", "<state>1</state>");
   if (digitalRead(RelayPin) != RelayState) {
@@ -158,6 +155,7 @@ void switchRelayOn() {
 }
 
 void switchRelayOff() {
+  Serial.println("switchRelayOff()");
   TimerSeconds = 0;
   RelayState = LOW;
   server.send(200, "text/plain", "<state>0</state>");
