@@ -39,7 +39,7 @@ String ChannelName = "";
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
-#define wifiManagerDebugOutput   false
+#define wifiManagerDebugOutput   true
 char ip[16]      = "0.0.0.0";
 char netmask[16] = "0.0.0.0";
 char gw[16]      = "0.0.0.0";
