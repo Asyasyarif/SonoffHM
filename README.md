@@ -51,7 +51,9 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   - IP der CCU (Das Feld ist durch die IP 0.0.0.0 vorbelegt)
   - Name des Sonoff Geräts - 
     **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.**    Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
+  - Restore State: wenn aktiviert, wird bei Stromzufuhr der letzte Schaltzustand von der CCU abgefragt und wiederhergestellt
   - statische IP Adresse (optional)
+  - Beispiel:
       ![config3](Images/Sonoff-ConfigMode3.png)
 
   
@@ -85,3 +87,17 @@ Schritte 1 bis 3 sind identisch wie in Variante 1. Theoretisch könnten wir die 
   ```/usr/local/addons/cuxd/curl -s http://{ip-des-sonoff}/0```
  
   Abschließend mit OK speichern und jetzt kann das Sonoff Gerät über die Homematic Oberfläche geschaltet werden.
+  
+  
+  
+# NEU: Timer-Funktion
+Der Aufruf der Einschalt-URL kann um den Parameter `?t=xxx` ergänzt werden.
+
+xxx ist dabei die Anzahl an Sekunden, die der Sonoff eingeschaltet bleiben soll.
+
+Beispiel für einen 2-Minuten-Timer:
+`http://{ip-des-sonoff}/1?t=120`
+
+Der Timer wird deaktiviert
+  - wenn ein Ausschaltbefehl (`http://{ip-des-sonoff}/0`) gesendet wird
+  - wenn ein Einschaltbefehl ohne Timer-Angabe (`http://{ip-des-sonoff}/1`) gesendet wird (Dauer-Ein)
