@@ -12,9 +12,6 @@
  ![cuxddev](Images/CCU_CUxD_sonoff_anlegen.png)    
   
   ![cuxddevname](Images/CCU_Geraetebenennung.png)  
-  
-  ![ccusystemvar](Images/CCU_Systemvariable.png)    
-
 
 
 **2.) Flashen des Sonoff Devices** 
