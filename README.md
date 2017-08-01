@@ -65,7 +65,7 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   
   
   
-# NEU: Timer-Funktion
+# Timer-Funktion
 Der Aufruf der Einschalt-URL kann um den Parameter `?t=xxx` ergänzt werden.
 
 xxx ist dabei die Anzahl an Sekunden, die der Sonoff eingeschaltet bleiben soll.
