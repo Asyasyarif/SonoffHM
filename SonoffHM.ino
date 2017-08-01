@@ -17,8 +17,8 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-char ccuIP[16]      = "";
-char DeviceName[50] = "";
+char ccuIP[16]       = "";
+char DeviceName[100] = "";
 
 #define greenLEDPin           13
 #define RelayPin              12
@@ -28,7 +28,10 @@ char DeviceName[50] = "";
 
 bool RelayState = LOW;
 bool KeyPress = false;
+bool restoreOldState = false;
 unsigned long LastMillisKeyPress = 0;
+unsigned long TimerStartMillis = 0;
+int TimerSeconds = 0;
 
 ESP8266WebServer server(80);
 String ChannelName = "";
@@ -36,7 +39,7 @@ String ChannelName = "";
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
-#define wifiManagerDebugOutput   false
+#define wifiManagerDebugOutput   true
 char ip[16]      = "0.0.0.0";
 char netmask[16] = "0.0.0.0";
 char gw[16]      = "0.0.0.0";
@@ -66,76 +69,116 @@ void setup() {
   if (doWifiConnect()) {
     Serial.println("WLAN erfolgreich verbunden!");
     printWifiStatus();
-    if (!setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'")) {
-      Serial.println("Error setting Variable " + String(DeviceName) + "_IP");
-      ESP.restart();
-    }
   } else ESP.restart();
-  server.on("/0", switchRelayOff);
-  server.on("/1", switchRelayOn);
-  server.on("/2", toggleRelay);
-  server.on("/state", returnRelayState);
+  server.on("/0", webSwitchRelayOff);
+  server.on("/1", webSwitchRelayOn);
+  server.on("/2", webToggleRelay);
+  server.on("/state", getRelayState);
   server.begin();
 
   ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
-  String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
 
   digitalWrite(greenLEDPin, HIGH);
 
-  if (stateFromCCU == "true") {
-    switchRelayOn();
+  if ((restoreOldState) && (getStateFromCCUCUxD(ChannelName + ".STATE", "State") == "true")) {
+    switchRelayOn(false);
   } else {
-    switchRelayOff();
+    switchRelayOff(false);
   }
   startOTAhandling();
 }
 
 
 void loop() {
+  if (LastMillisKeyPress > millis())
+    LastMillisKeyPress = millis();
+  if (TimerStartMillis > millis())
+    TimerStartMillis = millis();
+
   ArduinoOTA.handle();
   server.handleClient();
   if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
     LastMillisKeyPress = millis();
     if (KeyPress == false) {
-      setStateCCUCUxD(String(DeviceName) + "_IP", "'" + WiFi.localIP().toString() + "'");
-      toggleRelay();
+      TimerSeconds = 0;
+      toggleRelay(true);
       KeyPress = true;
     }
   } else {
     KeyPress = false;
   }
+
+  if (TimerSeconds > 0 && millis() - TimerStartMillis > TimerSeconds * 1000) {
+    Serial.println("Timer abgelaufen. Schalte Relais aus.");
+    switchRelayOff(true);
+  }
+
   delay(50);
 }
 
-void returnRelayState() {
-  server.send(200, "text/html", String(digitalRead(RelayPin)));
+void getRelayState() {
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</timer>");
 }
 
-void switchRelayOn() {
+void webToggleRelay() {
+  toggleRelay(false);
+}
+void webSwitchRelayOff() {
+  switchRelayOff(false);
+}
+
+void webSwitchRelayOn() {
+  switchRelayOn(false);
+  if (server.args() > 0) {
+    for (int i = 0; i < server.args(); i++) {
+      if (server.argName(i) == "t") {
+        TimerSeconds = server.arg(i).toInt();
+        if (TimerSeconds > 0) {
+          TimerStartMillis = millis();
+          Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
+        } else {
+          Serial.println("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0");
+        }
+      }
+    }
+  } else {
+    TimerSeconds = 0;
+    Serial.println("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0");
+  }
+}
+
+void switchRelayOn(bool transmitState) {
+  Serial.println("switchRelayOn()");
   RelayState = HIGH;
-  server.send(200, "text/html", "On OK");
   if (digitalRead(RelayPin) != RelayState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
-    setStateCCUCUxD(ChannelName + ".SET_STATE", "1");
+    if (transmitState) {
+      setStateCCUCUxD(ChannelName + ".SET_STATE", "1");
+      server.send(200, "text/plain", "<state>1</state>");
+    }
   }
 }
 
-void switchRelayOff() {
+void switchRelayOff(bool transmitState) {
+  Serial.println("switchRelayOff()");
+  TimerSeconds = 0;
   RelayState = LOW;
-  server.send(200, "text/html", "Off OK");
   if (digitalRead(RelayPin) != RelayState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
-    setStateCCUCUxD(ChannelName + ".SET_STATE",  "0" );
+    if (transmitState) {
+      setStateCCUCUxD(ChannelName + ".SET_STATE",  "0" );
+      server.send(200, "text/plain", "<state>0</state>");
+    }
   }
 }
 
-void toggleRelay() {
+void toggleRelay(bool transmitState) {
   if (digitalRead(RelayPin) == LOW) {
-    switchRelayOn();
+    switchRelayOn(transmitState);
   } else  {
-    switchRelayOff();
+    switchRelayOff(transmitState);
   }
 }
 
