@@ -77,11 +77,10 @@ void setup() {
   server.begin();
 
   ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
-  String stateFromCCU = getStateFromCCUCUxD(ChannelName + ".STATE", "State");
 
   digitalWrite(greenLEDPin, HIGH);
 
-  if (restoreOldState && stateFromCCU == "true") {
+  if ((restoreOldState) && (getStateFromCCUCUxD(ChannelName + ".STATE", "State") == "true")) {
     switchRelayOn(false);
   } else {
     switchRelayOff(false);

@@ -15,7 +15,7 @@ bool doWifiConnect() {
   WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", DeviceName, 100);
   char*chrRestoreOldState = "0";
   if (restoreOldState) chrRestoreOldState =  "1" ;                   
-  WiFiManagerParameter custom_cbrestorestate("restorestate", "Restore state:", chrRestoreOldState, 5, 1);
+  WiFiManagerParameter custom_cbrestorestate("restorestate", "Schaltzustand wiederherstellen: ", chrRestoreOldState, 5, 1);
   //WiFiManagerParameter custom_usedbackend("usedbackend", "Backend", "", 10, 2, "<option value=\"0\">CCU</option><option selected value=\"1\">ioBroker</option>");
 
   WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", "", 16);
