@@ -39,7 +39,7 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   - WLAN-Key
   - IP der CCU (Das Feld ist durch die IP 0.0.0.0 vorbelegt)
   - Name des Sonoff Geräts - 
-    **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.**    Der Sonoff sucht in der CCU die Variable mit seinem Namen und dem Postfix IP (Bsp: Sonoff1_IP) und trägt dort seine aktuelle IP Adresse ein.
+    **Wichtig: Der Gerätename muss mit dem Namen des CuxD Devices oder besser gesagt mit dem Namen des ersten Kanals übereinstimmen.**    
   - Restore State: wenn aktiviert, wird bei Stromzufuhr der letzte Schaltzustand von der CCU abgefragt und wiederhergestellt
   - statische IP Adresse (optional)
   - Beispiel:
