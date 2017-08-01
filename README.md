@@ -33,6 +33,7 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   
   ![config1](Images/Sonoff-ConfigMode1.png)
   
+
   Verbindet man sich mit diesem, startet automatisch eine Konfigurationsseite. Sollte die Seite nicht automatisch geöffnet werden einfach die IP 192.168.4.1 im Browser aufrufen.
     ![config2](Images/Sonoff-ConfigMode2.png)
 
@@ -46,6 +47,7 @@ Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es mög
   - statische IP Adresse (optional)
   - Beispiel:
       ![config3](Images/Sonoff-ConfigMode3.png)
+
 
   
 **4.) Einrichtung der Steuerung**
