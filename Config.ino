@@ -13,17 +13,20 @@ bool loadSystemConfig() {
         configFile.readBytes(buf.get(), size);
         DynamicJsonBuffer jsonBuffer;
         JsonObject& json = jsonBuffer.parseObject(buf.get());
+        Serial.println("Content of JSON Config-File: /"+configJsonFile);
         json.printTo(Serial);
         if (json.success()) {
-          Serial.println("\nparsed json");
-          strcpy(ip,      json["ip"]);
-          strcpy(netmask, json["netmask"]);
-          strcpy(gw,      json["gw"]);
-          strcpy(ccuIP,   json["ccuip"]);
-          strcpy(DeviceName, json["sonoff"]);
+          Serial.println("\nJSON OK");
+          ((json["ip"]).as<String>()).toCharArray(ip, IPSize);
+          ((json["netmask"]).as<String>()).toCharArray(netmask, IPSize);
+          ((json["gw"]).as<String>()).toCharArray(gw, IPSize);
+          ((json["ccuip"]).as<String>()).toCharArray(ccuIP, IPSize);
+          ((json["sonoff"]).as<String>()).toCharArray(DeviceName, DeviceNameSize);
+
+          BackendType = json["backendtype"];
           restoreOldState = json["restoreOldState"];
         } else {
-          Serial.println("failed to load json config");
+          Serial.println("\nERROR loading config");
         }
       }
       return true;
@@ -49,6 +52,7 @@ bool saveSystemConfig() {
   json["ccuip"] = ccuIP;
   json["sonoff"] = DeviceName;
   json["restoreOldState"] = restoreOldState;
+  json["backendtype"] = BackendType;
 
   SPIFFS.remove("/" + configJsonFile);
   File configFile = SPIFFS.open("/" + configJsonFile, "w");

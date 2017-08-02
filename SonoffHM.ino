@@ -17,14 +17,21 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-char ccuIP[16]       = "";
-char DeviceName[100] = "";
+#define IPSize 16
+#define DeviceNameSize 100
+
+char ccuIP[IPSize]   = "";
+char DeviceName[DeviceNameSize] = "";
+byte BackendType = 0;
 
 #define greenLEDPin           13
 #define RelayPin              12
 #define SwitchPin              0
 #define MillisKeyBounce      500  //Millisekunden zwischen 2xtasten
-#define ConfigPortalTimeout  180  //Timeout des AccessPoint-Modus
+#define ConfigPortalTimeout  180  //Timeout (Sekunden) des AccessPoint-Modus
+#define HTTPTimeOut         3000  //Timeout (Millisekunden) für http requests
+
+#define BackendType_HomeMatic 0
 
 bool RelayState = LOW;
 bool KeyPress = false;
@@ -40,9 +47,9 @@ String ChannelName = "";
 bool shouldSaveConfig        = false;
 String configJsonFile        = "config.json";
 #define wifiManagerDebugOutput   true
-char ip[16]      = "0.0.0.0";
-char netmask[16] = "0.0.0.0";
-char gw[16]      = "0.0.0.0";
+char ip[IPSize]      = "0.0.0.0";
+char netmask[IPSize] = "0.0.0.0";
+char gw[IPSize]      = "0.0.0.0";
 bool startWifiManager = false;
 
 void setup() {
@@ -52,9 +59,9 @@ void setup() {
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
 
+  Serial.println("Config-Modus aktivieren?");
   for (int i = 0; i < 20; i++) {
     if (digitalRead(SwitchPin) == LOW) {
-      Serial.println("Config-Modus aktiviert!");
       startWifiManager = true;
       break;
     }
@@ -63,6 +70,8 @@ void setup() {
     digitalWrite(greenLEDPin, LOW);
     delay(100);
   }
+
+  Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
 
   loadSystemConfig();
 
@@ -76,15 +85,16 @@ void setup() {
   server.on("/state", getRelayState);
   server.begin();
 
-  ChannelName =  "CUxD." + getStateFromCCUCUxD(DeviceName, "Address");
-
-  digitalWrite(greenLEDPin, HIGH);
-
-  if ((restoreOldState) && (getStateFromCCUCUxD(ChannelName + ".STATE", "State") == "true")) {
-    switchRelayOn(false);
-  } else {
-    switchRelayOff(false);
+  if (BackendType == BackendType_HomeMatic) {
+    ChannelName =  "CUxD." + getStateCUxD(DeviceName, "Address");
+    digitalWrite(greenLEDPin, HIGH);
+    if ((restoreOldState) && (getStateCUxD(ChannelName + ".STATE", "State") == "true")) {
+      switchRelayOn(false);
+    } else {
+      switchRelayOff((getStateCUxD(ChannelName + ".STATE", "State") == "true"));
+    }
   }
+
   startOTAhandling();
 }
 
@@ -154,9 +164,9 @@ void switchRelayOn(bool transmitState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
     if (transmitState) {
-      setStateCCUCUxD(ChannelName + ".SET_STATE", "1");
-      server.send(200, "text/plain", "<state>1</state>");
+      if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE", "1");
     }
+    server.send(200, "text/plain", "<state>1</state>");
   }
 }
 
@@ -168,9 +178,9 @@ void switchRelayOff(bool transmitState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
     if (transmitState) {
-      setStateCCUCUxD(ChannelName + ".SET_STATE",  "0" );
-      server.send(200, "text/plain", "<state>0</state>");
+      if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE",  "0" );
     }
+    server.send(200, "text/plain", "<state>0</state>");
   }
 }
 
