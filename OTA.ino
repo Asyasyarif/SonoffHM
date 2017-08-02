@@ -18,9 +18,6 @@ void startOTAhandling() {
   });
 
   String Hostname = "Sonoff-OTA-" + WiFi.macAddress();
-  char a[] = "";
-  Hostname.toCharArray(a, 30);
-
-  ArduinoOTA.setHostname(a);
+  ArduinoOTA.setHostname(Hostname.c_str());
   ArduinoOTA.begin();
 }
