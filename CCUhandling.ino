@@ -1,8 +1,8 @@
-bool setStateCCUCUxD(String id, String value) {
+bool setStateCUxD(String id, String value) {
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
-    http.setTimeout(5000);
+    http.setTimeout(HTTPTimeOut);
     String url = "http://" + String(ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
     Serial.print("setStateFromCCUCUxD url: " + url+" -> ");
     http.begin(url);
@@ -26,14 +26,13 @@ bool setStateCCUCUxD(String id, String value) {
     return (payload != "null");
 
   } else ESP.restart();
-
 }
 
-String getStateFromCCUCUxD(String id, String type) {
+String getStateCUxD(String id, String type) {
   if (WiFi.status() == WL_CONNECTED)
   {
     HTTPClient http;
-    http.setTimeout(5000);
+    http.setTimeout(HTTPTimeOut);
     String url = "http://" + String(ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
     Serial.print("getStateFromCCUCUxD url: " + url +" -> ");
     http.begin(url);
