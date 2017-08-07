@@ -33,6 +33,8 @@ byte BackendType = 0;
 
 #define BackendType_HomeMatic 0
 
+String bootConfigModeFilename = "bootcfg.mod";
+
 bool RelayState = LOW;
 bool KeyPress = false;
 bool restoreOldState = false;
@@ -59,19 +61,35 @@ void setup() {
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
 
-  Serial.println("Config-Modus aktivieren?");
-  for (int i = 0; i < 20; i++) {
-    if (digitalRead(SwitchPin) == LOW) {
+  Serial.print("Config-Modus durch bootConfigMode aktivieren? ");
+  if (SPIFFS.begin()) {
+    Serial.println("mounted file system");
+    if (SPIFFS.exists("/" + bootConfigModeFilename)) {
       startWifiManager = true;
-      break;
+      Serial.println("Ja, " + bootConfigModeFilename + " existiert, starte Config-Modus");
+      SPIFFS.remove("/" + bootConfigModeFilename);
+      SPIFFS.end();
+    } else {
+      Serial.println("Nein, " + bootConfigModeFilename + " existiert nicht");
     }
-    digitalWrite(greenLEDPin, HIGH);
-    delay(100);
-    digitalWrite(greenLEDPin, LOW);
-    delay(100);
+  } else {
+    Serial.println("Nein, SPIFFS mount fail!");
   }
 
-  Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
+  if (!startWifiManager) {
+    Serial.println("Config-Modus mit Taster aktivieren?");
+    for (int i = 0; i < 20; i++) {
+      if (digitalRead(SwitchPin) == LOW) {
+        startWifiManager = true;
+        break;
+      }
+      digitalWrite(greenLEDPin, HIGH);
+      delay(100);
+      digitalWrite(greenLEDPin, LOW);
+      delay(100);
+    }
+    Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
+  }
 
   loadSystemConfig();
 
@@ -82,7 +100,8 @@ void setup() {
   server.on("/0", webSwitchRelayOff);
   server.on("/1", webSwitchRelayOn);
   server.on("/2", webToggleRelay);
-  server.on("/state", getRelayState);
+  server.on("/state", replyRelayState);
+  server.on("/bootConfigMode", bootConfigMode);
   server.begin();
 
   if (BackendType == BackendType_HomeMatic) {
@@ -97,7 +116,6 @@ void setup() {
 
   startOTAhandling();
 }
-
 
 void loop() {
   if (LastMillisKeyPress > millis())
@@ -126,8 +144,8 @@ void loop() {
   delay(50);
 }
 
-void getRelayState() {
-  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</timer>");
+void replyRelayState() {
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>");
 }
 
 void webToggleRelay() {
@@ -166,8 +184,8 @@ void switchRelayOn(bool transmitState) {
     if (transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE", "1");
     }
-    server.send(200, "text/plain", "<state>1</state>");
   }
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer>");
 }
 
 void switchRelayOff(bool transmitState) {
@@ -180,8 +198,8 @@ void switchRelayOff(bool transmitState) {
     if (transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE",  "0" );
     }
-    server.send(200, "text/plain", "<state>0</state>");
   }
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state>");
 }
 
 void toggleRelay(bool transmitState) {
@@ -189,6 +207,25 @@ void toggleRelay(bool transmitState) {
     switchRelayOn(transmitState);
   } else  {
     switchRelayOff(transmitState);
+  }
+}
+
+void bootConfigMode() {
+  if (SPIFFS.begin()) {
+    Serial.println("mounted file system");
+    if (!SPIFFS.exists("/" + bootConfigModeFilename)) {
+      File bootConfigModeFile = SPIFFS.open("/" + bootConfigModeFilename, "w");
+      bootConfigModeFile.print("0");
+      bootConfigModeFile.close();
+      SPIFFS.end();
+      Serial.println("Boot to ConfigMode requested. Restarting...");
+      server.send(200, "text/plain", "<state>enableBootConfigMode - Rebooting</state>");
+      delay(500);
+      ESP.restart();
+    } else {
+      server.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
+      SPIFFS.end();
+    }
   }
 }
 

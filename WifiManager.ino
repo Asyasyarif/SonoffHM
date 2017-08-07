@@ -7,9 +7,9 @@ bool doWifiConnect() {
   for (int i = 0; i < _psk.length(); i++) {
     _pskMask += "*";
   }
-  Serial.println("ssid = "+_ssid+", psk = "+_pskMask);
+  Serial.println("ssid = " + _ssid + ", psk = " + _pskMask);
 
-    
+
   const char* ipStr = ip; byte ipBytes[4]; parseBytes(ipStr, '.', ipBytes, 4, 10);
   const char* netmaskStr = netmask; byte netmaskBytes[4]; parseBytes(netmaskStr, '.', netmaskBytes, 4, 10);
   const char* gwStr = gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
@@ -18,7 +18,7 @@ bool doWifiConnect() {
     Serial.println("Connecting WLAN the classic way...");
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
-    WiFi.begin(_ssid.c_str(),_psk.c_str());
+    WiFi.begin(_ssid.c_str(), _psk.c_str());
     int waitCounter = 0;
     if (String(ip) != "0.0.0.0")
       WiFi.config(IPAddress(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), IPAddress(gwBytes[0], gwBytes[1], gwBytes[2], gwBytes[3]), IPAddress(netmaskBytes[0], netmaskBytes[1], netmaskBytes[2], netmaskBytes[3]));
@@ -46,9 +46,9 @@ bool doWifiConnect() {
     WiFiManagerParameter custom_cbrestorestate("restorestate", "Schaltzustand wiederherstellen: ", chrRestoreOldState, 8, 1);
     WiFiManagerParameter custom_backendtype("backendtype", "Backend", "", 8, 2, "<option selected value='0'>HomeMatic</option>");
 
-    WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", "", IPSize);
-    WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", "", IPSize);
-    WiFiManagerParameter custom_gw("custom_gw", "Gateway", "", IPSize);
+    WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", (String(ip) != "0.0.0.0") ? ip : "", IPSize);
+    WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", (String(netmask) != "0.0.0.0") ? netmask : "", IPSize);
+    WiFiManagerParameter custom_gw("custom_gw", "Gateway",  (String(gw) != "0.0.0.0") ? gw : "", IPSize);
     WiFiManagerParameter custom_text("<br/><br>Statische IP (wenn leer, dann DHCP):");
     wifiManager.addParameter(&custom_ccuip);
     wifiManager.addParameter(&custom_sonoffname);
@@ -70,7 +70,7 @@ bool doWifiConnect() {
       else {
         if (!wifiManager.startConfigPortal(Hostname.c_str())) {
           Serial.println("failed to connect and hit timeout");
-          delay(1000);
+          delay(500);
           ESP.restart();
         }
       }
@@ -102,7 +102,7 @@ bool doWifiConnect() {
       strcpy(DeviceName, custom_sonoffname.getValue());
 
       saveSystemConfig();
-
+      
       delay(100);
       ESP.restart();
     }

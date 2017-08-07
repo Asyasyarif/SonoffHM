@@ -76,3 +76,10 @@ Beispiel für einen 2-Minuten-Timer:
 Der Timer wird deaktiviert
   - wenn ein Ausschaltbefehl (`http://{ip-des-sonoff}/0`) gesendet wird
   - wenn ein Einschaltbefehl ohne Timer-Angabe (`http://{ip-des-sonoff}/1`) gesendet wird (Dauer-Ein)
+
+# Start des Konfigurationsmodus  - ohne - Drücken des Tasters
+Ist der Sonoff einmalig fertig konfiguriert, kann der Konfigurationsmodus erneut gestartet werden, ohne dass der Taster gedrückt werden muss.
+
+Beim Aufruf der URL `http://{ip-des-sonoff}/bootConfigMode` wird der Sonoff im Konfigurationsmodus neu gestartet.
+
+Nach einigen Sekunden ist das Konfigurationsportal wie unter Punkt 3 erreichbar. Es können nun Änderungen an der Konfiguration vorgenommen werden.
