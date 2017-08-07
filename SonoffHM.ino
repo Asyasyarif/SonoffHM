@@ -145,7 +145,7 @@ void loop() {
 }
 
 void replyRelayState() {
-  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</timer>");
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>");
 }
 
 void webToggleRelay() {
@@ -185,7 +185,7 @@ void switchRelayOn(bool transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE", "1");
     }
   }
-  replyRelayState();
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer>");
 }
 
 void switchRelayOff(bool transmitState) {
@@ -199,7 +199,7 @@ void switchRelayOff(bool transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE",  "0" );
     }
   }
-  replyRelayState();
+  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state>");
 }
 
 void toggleRelay(bool transmitState) {
