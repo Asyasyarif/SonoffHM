@@ -61,28 +61,34 @@ void setup() {
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
 
-  Serial.println("Config-Modus aktivieren?");
-  for (int i = 0; i < 20; i++) {
-    if (digitalRead(SwitchPin) == LOW) {
-      startWifiManager = true;
-      break;
-    }
-    digitalWrite(greenLEDPin, HIGH);
-    delay(100);
-    digitalWrite(greenLEDPin, LOW);
-    delay(100);
-  }
-
-  Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
-
+  Serial.print("Config-Modus durch bootConfigMode aktivieren? ");
   if (SPIFFS.begin()) {
     Serial.println("mounted file system");
     if (SPIFFS.exists("/" + bootConfigModeFilename)) {
       startWifiManager = true;
-      Serial.println(bootConfigModeFilename + " existiert, starte WiFiManager");
+      Serial.println("Ja, " + bootConfigModeFilename + " existiert, starte Config-Modus");
       SPIFFS.remove("/" + bootConfigModeFilename);
       SPIFFS.end();
+    } else {
+      Serial.println("Nein, " + bootConfigModeFilename + " existiert nicht");
     }
+  } else {
+    Serial.println("Nein, SPIFFS mount fail!");
+  }
+
+  if (!startWifiManager) {
+    Serial.println("Config-Modus mit Taster aktivieren?");
+    for (int i = 0; i < 20; i++) {
+      if (digitalRead(SwitchPin) == LOW) {
+        startWifiManager = true;
+        break;
+      }
+      digitalWrite(greenLEDPin, HIGH);
+      delay(100);
+      digitalWrite(greenLEDPin, LOW);
+      delay(100);
+    }
+    Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
   }
 
   loadSystemConfig();
@@ -218,16 +224,6 @@ void bootConfigMode() {
       ESP.restart();
     } else {
       server.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
-      SPIFFS.end();
-    }
-  }
-}
-
-void removeBootConfigModeFile() {
-  if (SPIFFS.begin()) {
-    Serial.println("mounted file system");
-    if (SPIFFS.exists("/" + bootConfigModeFilename)) {
-      SPIFFS.remove("/" + bootConfigModeFilename);
       SPIFFS.end();
     }
   }

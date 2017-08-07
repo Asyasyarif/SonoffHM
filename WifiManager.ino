@@ -102,9 +102,7 @@ bool doWifiConnect() {
       strcpy(DeviceName, custom_sonoffname.getValue());
 
       saveSystemConfig();
-
-      removeBootConfigModeFile();
-
+      
       delay(100);
       ESP.restart();
     }
