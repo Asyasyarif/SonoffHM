@@ -33,6 +33,8 @@ byte BackendType = 0;
 
 #define BackendType_HomeMatic 0
 
+String bootConfigModeFilename = "bootcfg.mod";
+
 bool RelayState = LOW;
 bool KeyPress = false;
 bool restoreOldState = false;
@@ -73,6 +75,16 @@ void setup() {
 
   Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
 
+  if (SPIFFS.begin()) {
+    Serial.println("mounted file system");
+    if (SPIFFS.exists("/" + bootConfigModeFilename)) {
+      startWifiManager = true;
+      Serial.println(bootConfigModeFilename + " existiert, starte WiFiManager");
+      SPIFFS.remove("/" + bootConfigModeFilename);
+      SPIFFS.end();
+    }
+  }
+
   loadSystemConfig();
 
   if (doWifiConnect()) {
@@ -82,7 +94,8 @@ void setup() {
   server.on("/0", webSwitchRelayOff);
   server.on("/1", webSwitchRelayOn);
   server.on("/2", webToggleRelay);
-  server.on("/state", getRelayState);
+  server.on("/state", replyRelayState);
+  server.on("/bootConfigMode", bootConfigMode);
   server.begin();
 
   if (BackendType == BackendType_HomeMatic) {
@@ -97,7 +110,6 @@ void setup() {
 
   startOTAhandling();
 }
-
 
 void loop() {
   if (LastMillisKeyPress > millis())
@@ -126,7 +138,7 @@ void loop() {
   delay(50);
 }
 
-void getRelayState() {
+void replyRelayState() {
   server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</timer>");
 }
 
@@ -166,8 +178,8 @@ void switchRelayOn(bool transmitState) {
     if (transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE", "1");
     }
-    server.send(200, "text/plain", "<state>1</state>");
   }
+  replyRelayState();
 }
 
 void switchRelayOff(bool transmitState) {
@@ -180,8 +192,8 @@ void switchRelayOff(bool transmitState) {
     if (transmitState) {
       if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE",  "0" );
     }
-    server.send(200, "text/plain", "<state>0</state>");
   }
+  replyRelayState();
 }
 
 void toggleRelay(bool transmitState) {
@@ -189,6 +201,35 @@ void toggleRelay(bool transmitState) {
     switchRelayOn(transmitState);
   } else  {
     switchRelayOff(transmitState);
+  }
+}
+
+void bootConfigMode() {
+  if (SPIFFS.begin()) {
+    Serial.println("mounted file system");
+    if (!SPIFFS.exists("/" + bootConfigModeFilename)) {
+      File bootConfigModeFile = SPIFFS.open("/" + bootConfigModeFilename, "w");
+      bootConfigModeFile.print("0");
+      bootConfigModeFile.close();
+      SPIFFS.end();
+      Serial.println("Boot to ConfigMode requested. Restarting...");
+      server.send(200, "text/plain", "<state>enableBootConfigMode - Rebooting</state>");
+      delay(500);
+      ESP.restart();
+    } else {
+      server.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
+      SPIFFS.end();
+    }
+  }
+}
+
+void removeBootConfigModeFile() {
+  if (SPIFFS.begin()) {
+    Serial.println("mounted file system");
+    if (SPIFFS.exists("/" + bootConfigModeFilename)) {
+      SPIFFS.remove("/" + bootConfigModeFilename);
+      SPIFFS.end();
+    }
   }
 }
 
