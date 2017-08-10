@@ -17,11 +17,15 @@
 #include <FS.h>
 #include <ArduinoJson.h>
 
-#define IPSize 16
-#define DeviceNameSize 100
+#define IPSIZE         16
+#define DEVICENAMESIZE 255
 
-char ccuIP[IPSize]   = "";
-char DeviceName[DeviceNameSize] = "";
+struct hmconfig_t {
+  char ccuIP[IPSIZE]   = "";
+  char DeviceName[DEVICENAMESIZE] = "";
+  String ChannelName = "";
+} HomeMaticConfig;
+
 byte BackendType = 0;
 
 #define greenLEDPin           13
@@ -43,20 +47,21 @@ unsigned long TimerStartMillis = 0;
 int TimerSeconds = 0;
 
 ESP8266WebServer server(80);
-String ChannelName = "";
 
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
-String configJsonFile        = "config.json";
+const String configJsonFile        = "config.json";
 #define wifiManagerDebugOutput   true
-char ip[IPSize]      = "0.0.0.0";
-char netmask[IPSize] = "0.0.0.0";
-char gw[IPSize]      = "0.0.0.0";
+struct sonoffnetconfig_t {
+  char ip[IPSIZE]      = "0.0.0.0";
+  char netmask[IPSIZE] = "0.0.0.0";
+  char gw[IPSIZE]      = "0.0.0.0";
+} SonoffNetConfig;
 bool startWifiManager = false;
 
 void setup() {
   Serial.begin(115200);
-  Serial.println("Sonoff startet...");
+  Serial.println("Sonoff " + WiFi.macAddress() + " startet...");
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
@@ -91,29 +96,32 @@ void setup() {
     Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
   }
 
-  loadSystemConfig();
+  startWifiManager = !loadSystemConfig();
 
   if (doWifiConnect()) {
     Serial.println("WLAN erfolgreich verbunden!");
     printWifiStatus();
   } else ESP.restart();
   server.on("/0", webSwitchRelayOff);
+  server.on("/off", webSwitchRelayOff);
   server.on("/1", webSwitchRelayOn);
+  server.on("/on", webSwitchRelayOn);
   server.on("/2", webToggleRelay);
+  server.on("/toggle", webToggleRelay);
   server.on("/state", replyRelayState);
+  server.on("/getstate", replyRelayState);
   server.on("/bootConfigMode", bootConfigMode);
   server.begin();
 
   if (BackendType == BackendType_HomeMatic) {
-    ChannelName =  "CUxD." + getStateCUxD(DeviceName, "Address");
+    HomeMaticConfig.ChannelName =  "CUxD." + getStateCUxD(HomeMaticConfig.DeviceName, "Address");
     digitalWrite(greenLEDPin, HIGH);
-    if ((restoreOldState) && (getStateCUxD(ChannelName + ".STATE", "State") == "true")) {
+    if ((restoreOldState) && (getStateCUxD(HomeMaticConfig.ChannelName + ".STATE", "State") == "true")) {
       switchRelayOn(false);
     } else {
-      switchRelayOff((getStateCUxD(ChannelName + ".STATE", "State") == "true"));
+      switchRelayOff((getStateCUxD(HomeMaticConfig.ChannelName + ".STATE", "State") == "true"));
     }
   }
-
   startOTAhandling();
 }
 
@@ -182,7 +190,7 @@ void switchRelayOn(bool transmitState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
     if (transmitState) {
-      if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE", "1");
+      if (BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE", "1");
     }
   }
   server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer>");
@@ -196,7 +204,7 @@ void switchRelayOff(bool transmitState) {
     digitalWrite(RelayPin, RelayState);
     digitalWrite(greenLEDPin, !RelayState);
     if (transmitState) {
-      if (BackendType == BackendType_HomeMatic) setStateCUxD(ChannelName + ".SET_STATE",  "0" );
+      if (BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE",  "0" );
     }
   }
   server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state>");

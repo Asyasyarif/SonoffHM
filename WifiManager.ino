@@ -10,9 +10,9 @@ bool doWifiConnect() {
   Serial.println("ssid = " + _ssid + ", psk = " + _pskMask);
 
 
-  const char* ipStr = ip; byte ipBytes[4]; parseBytes(ipStr, '.', ipBytes, 4, 10);
-  const char* netmaskStr = netmask; byte netmaskBytes[4]; parseBytes(netmaskStr, '.', netmaskBytes, 4, 10);
-  const char* gwStr = gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
+  const char* ipStr = SonoffNetConfig.ip; byte ipBytes[4]; parseBytes(ipStr, '.', ipBytes, 4, 10);
+  const char* netmaskStr = SonoffNetConfig.netmask; byte netmaskBytes[4]; parseBytes(netmaskStr, '.', netmaskBytes, 4, 10);
+  const char* gwStr = SonoffNetConfig.gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
 
   if (!startWifiManager && _ssid != "" && _psk != "" ) {
     Serial.println("Connecting WLAN the classic way...");
@@ -20,7 +20,7 @@ bool doWifiConnect() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(_ssid.c_str(), _psk.c_str());
     int waitCounter = 0;
-    if (String(ip) != "0.0.0.0")
+    if (String(SonoffNetConfig.ip) != "0.0.0.0")
       WiFi.config(IPAddress(ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3]), IPAddress(gwBytes[0], gwBytes[1], gwBytes[2], gwBytes[3]), IPAddress(netmaskBytes[0], netmaskBytes[1], netmaskBytes[2], netmaskBytes[3]));
 
     while (WiFi.status() != WL_CONNECTED) {
@@ -39,16 +39,16 @@ bool doWifiConnect() {
     wifiManager.setDebugOutput(wifiManagerDebugOutput);
     wifiManager.setAPCallback(configModeCallback);
     wifiManager.setSaveConfigCallback(saveConfigCallback);
-    WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", ccuIP, IPSize);
-    WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", DeviceName, DeviceNameSize);
+    WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", HomeMaticConfig.ccuIP, IPSIZE);
+    WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", HomeMaticConfig.DeviceName, DEVICENAMESIZE);
     char*chrRestoreOldState = "0";
     if (restoreOldState) chrRestoreOldState =  "1" ;
     WiFiManagerParameter custom_cbrestorestate("restorestate", "Schaltzustand wiederherstellen: ", chrRestoreOldState, 8, 1);
     WiFiManagerParameter custom_backendtype("backendtype", "Backend", "", 8, 2, "<option selected value='0'>HomeMatic</option>");
 
-    WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", (String(ip) != "0.0.0.0") ? ip : "", IPSize);
-    WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", (String(netmask) != "0.0.0.0") ? netmask : "", IPSize);
-    WiFiManagerParameter custom_gw("custom_gw", "Gateway",  (String(gw) != "0.0.0.0") ? gw : "", IPSize);
+    WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", (String(SonoffNetConfig.ip) != "0.0.0.0") ? SonoffNetConfig.ip : "", IPSIZE);
+    WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", (String(SonoffNetConfig.netmask) != "0.0.0.0") ? SonoffNetConfig.netmask : "", IPSIZE);
+    WiFiManagerParameter custom_gw("custom_gw", "Gateway",  (String(SonoffNetConfig.gw) != "0.0.0.0") ? SonoffNetConfig.gw : "", IPSIZE);
     WiFiManagerParameter custom_text("<br/><br>Statische IP (wenn leer, dann DHCP):");
     wifiManager.addParameter(&custom_ccuip);
     wifiManager.addParameter(&custom_sonoffname);
@@ -81,25 +81,25 @@ bool doWifiConnect() {
     wifiManager.autoConnect(Hostname.c_str());
 
     Serial.println("Wifi Connected");
-    Serial.println("CUSTOM STATIC IP: " + String(ip) + " Netmask: " + String(netmask) + " GW: " + String(gw));
+    Serial.println("CUSTOM STATIC IP: " + String(SonoffNetConfig.ip) + " Netmask: " + String(SonoffNetConfig.netmask) + " GW: " + String(SonoffNetConfig.gw));
     if (shouldSaveConfig) {
       if (String(custom_ip.getValue()).length() > 5) {
         Serial.println("Custom IP Address is set!");
-        strcpy(ip, custom_ip.getValue());
-        strcpy(netmask, custom_netmask.getValue());
-        strcpy(gw, custom_gw.getValue());
+        strcpy(SonoffNetConfig.ip, custom_ip.getValue());
+        strcpy(SonoffNetConfig.netmask, custom_netmask.getValue());
+        strcpy(SonoffNetConfig.gw, custom_gw.getValue());
 
       } else {
-        strcpy(ip,      "0.0.0.0");
-        strcpy(netmask, "0.0.0.0");
-        strcpy(gw,      "0.0.0.0");
+        strcpy(SonoffNetConfig.ip,      "0.0.0.0");
+        strcpy(SonoffNetConfig.netmask, "0.0.0.0");
+        strcpy(SonoffNetConfig.gw,      "0.0.0.0");
       }
 
       restoreOldState = (atoi(custom_cbrestorestate.getValue()) == 1);
       BackendType = (atoi(custom_backendtype.getValue()));
 
-      strcpy(ccuIP, custom_ccuip.getValue());
-      strcpy(DeviceName, custom_sonoffname.getValue());
+      strcpy(HomeMaticConfig.ccuIP, custom_ccuip.getValue());
+      strcpy(HomeMaticConfig.DeviceName, custom_sonoffname.getValue());
 
       saveSystemConfig();
       
