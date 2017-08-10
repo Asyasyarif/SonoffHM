@@ -17,11 +17,11 @@ bool loadSystemConfig() {
         json.printTo(Serial);
         if (json.success()) {
           Serial.println("\nJSON OK");
-          ((json["ip"]).as<String>()).toCharArray(ip, IPSize);
-          ((json["netmask"]).as<String>()).toCharArray(netmask, IPSize);
-          ((json["gw"]).as<String>()).toCharArray(gw, IPSize);
-          ((json["ccuip"]).as<String>()).toCharArray(ccuIP, IPSize);
-          ((json["sonoff"]).as<String>()).toCharArray(DeviceName, DeviceNameSize);
+          ((json["ip"]).as<String>()).toCharArray(SonoffNetConfig.ip, IPSIZE);
+          ((json["netmask"]).as<String>()).toCharArray(SonoffNetConfig.netmask, IPSIZE);
+          ((json["gw"]).as<String>()).toCharArray(SonoffNetConfig.gw, IPSIZE);
+          ((json["ccuip"]).as<String>()).toCharArray(HomeMaticConfig.ccuIP, IPSIZE);
+          ((json["sonoff"]).as<String>()).toCharArray(HomeMaticConfig.DeviceName, DEVICENAMESIZE);
 
           BackendType = json["backendtype"];
           restoreOldState = json["restoreOldState"];
@@ -46,11 +46,11 @@ bool saveSystemConfig() {
   Serial.println("saving config");
   DynamicJsonBuffer jsonBuffer;
   JsonObject& json = jsonBuffer.createObject();
-  json["ip"] = ip;
-  json["netmask"] = netmask;
-  json["gw"] = gw;
-  json["ccuip"] = ccuIP;
-  json["sonoff"] = DeviceName;
+  json["ip"] = SonoffNetConfig.ip;
+  json["netmask"] = SonoffNetConfig.netmask;
+  json["gw"] = SonoffNetConfig.gw;
+  json["ccuip"] = HomeMaticConfig.ccuIP;
+  json["sonoff"] = HomeMaticConfig.DeviceName;
   json["restoreOldState"] = restoreOldState;
   json["backendtype"] = BackendType;
 
