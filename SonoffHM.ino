@@ -96,8 +96,7 @@ void setup() {
     Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
   }
 
-  if (!startWifiManager)
-    startWifiManager = !loadSystemConfig();
+  if (!loadSystemConfig()) startWifiManager = true;
 
   if (doWifiConnect()) {
     Serial.println("WLAN erfolgreich verbunden!");
