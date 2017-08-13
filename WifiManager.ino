@@ -40,17 +40,21 @@ bool doWifiConnect() {
     wifiManager.setAPCallback(configModeCallback);
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", HomeMaticConfig.ccuIP, IPSIZE);
+    WiFiManagerParameter custom_loxusername("loxusername", "Loxone Username", "", DEVICENAMESIZE);
+    WiFiManagerParameter custom_loxpassword("loxpassword", "Loxone Password", "", DEVICENAMESIZE,4);
     WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", HomeMaticConfig.DeviceName, DEVICENAMESIZE);
     char*chrRestoreOldState = "0";
     if (restoreOldState) chrRestoreOldState =  "1" ;
     WiFiManagerParameter custom_cbrestorestate("restorestate", "Schaltzustand wiederherstellen: ", chrRestoreOldState, 8, 1);
-    WiFiManagerParameter custom_backendtype("backendtype", "Backend", "", 8, 2, "<option selected value='0'>HomeMatic</option>");
+    WiFiManagerParameter custom_backendtype("backendtype", "Backend", "", 8, 2, "<option selected value='0'>HomeMatic</option><option value='1'>Loxone</option>");
 
     WiFiManagerParameter custom_ip("custom_ip", "IP-Adresse", (String(SonoffNetConfig.ip) != "0.0.0.0") ? SonoffNetConfig.ip : "", IPSIZE);
     WiFiManagerParameter custom_netmask("custom_netmask", "Netzmaske", (String(SonoffNetConfig.netmask) != "0.0.0.0") ? SonoffNetConfig.netmask : "", IPSIZE);
     WiFiManagerParameter custom_gw("custom_gw", "Gateway",  (String(SonoffNetConfig.gw) != "0.0.0.0") ? SonoffNetConfig.gw : "", IPSIZE);
     WiFiManagerParameter custom_text("<br/><br>Statische IP (wenn leer, dann DHCP):");
     wifiManager.addParameter(&custom_ccuip);
+    wifiManager.addParameter(&custom_loxusername);
+    wifiManager.addParameter(&custom_loxpassword);
     wifiManager.addParameter(&custom_sonoffname);
     wifiManager.addParameter(&custom_cbrestorestate);
     wifiManager.addParameter(&custom_backendtype);
@@ -100,6 +104,8 @@ bool doWifiConnect() {
 
       strcpy(HomeMaticConfig.ccuIP, custom_ccuip.getValue());
       strcpy(HomeMaticConfig.DeviceName, custom_sonoffname.getValue());
+      strcpy(LoxoneConfig.Username, custom_loxusername.getValue());
+      strcpy(LoxoneConfig.Password, custom_loxpassword.getValue());
 
       saveSystemConfig();
       

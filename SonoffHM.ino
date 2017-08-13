@@ -26,6 +26,11 @@ struct hmconfig_t {
   String ChannelName = "";
 } HomeMaticConfig;
 
+struct loxoneconfig_t {
+  char Username[DEVICENAMESIZE] = "";
+  char Password[DEVICENAMESIZE] = "";
+} LoxoneConfig;
+
 byte BackendType = 0;
 
 #define greenLEDPin           13

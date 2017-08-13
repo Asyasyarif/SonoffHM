@@ -13,7 +13,7 @@ bool loadSystemConfig() {
         configFile.readBytes(buf.get(), size);
         DynamicJsonBuffer jsonBuffer;
         JsonObject& json = jsonBuffer.parseObject(buf.get());
-        Serial.println("Content of JSON Config-File: /"+configJsonFile);
+        Serial.println("Content of JSON Config-File: /" + configJsonFile);
         json.printTo(Serial);
         if (json.success()) {
           Serial.println("\nJSON OK");
@@ -22,6 +22,8 @@ bool loadSystemConfig() {
           ((json["gw"]).as<String>()).toCharArray(SonoffNetConfig.gw, IPSIZE);
           ((json["ccuip"]).as<String>()).toCharArray(HomeMaticConfig.ccuIP, IPSIZE);
           ((json["sonoff"]).as<String>()).toCharArray(HomeMaticConfig.DeviceName, DEVICENAMESIZE);
+          ((json["loxusername"]).as<String>()).toCharArray(LoxoneConfig.Username, DEVICENAMESIZE);
+          ((json["loxpassword"]).as<String>()).toCharArray(LoxoneConfig.Password, DEVICENAMESIZE);
 
           BackendType = json["backendtype"];
           restoreOldState = json["restoreOldState"];
@@ -53,6 +55,9 @@ bool saveSystemConfig() {
   json["sonoff"] = HomeMaticConfig.DeviceName;
   json["restoreOldState"] = restoreOldState;
   json["backendtype"] = BackendType;
+  json["loxusername"] = LoxoneConfig.Username;
+  json["loxpassword"] = LoxoneConfig.Password;
+
 
   SPIFFS.remove("/" + configJsonFile);
   File configFile = SPIFFS.open("/" + configJsonFile, "w");
