@@ -3,8 +3,8 @@ bool setStateCUxD(String id, String value) {
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
       http.setTimeout(HTTPTimeOut);
-      String url = "http://" + String(HomeMaticConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
-      Serial.print("setStateCCUCUxD url: " + url + " -> ");
+      String url = "http://" + String(GlobalConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
+      Serial.print("setStateCUxD url: " + url + " -> ");
       http.begin(url);
       int httpCode = http.GET();
       String payload = "";
@@ -15,7 +15,7 @@ bool setStateCUxD(String id, String value) {
       }
       if (httpCode != 200) {
         blinkLED(3);
-        Serial.println("HTTP " + id + " fail");
+        Serial.println("HTTP " + id + " failed with HTTP Error Code "+String(httpCode));
       }
       http.end();
 
@@ -25,7 +25,10 @@ bool setStateCUxD(String id, String value) {
 
       return (payload != "null");
 
-    } else ESP.restart();
+    } else {
+      if (!doWifiConnect())
+        ESP.restart();
+      }
   } else return true;
 }
 
@@ -34,8 +37,8 @@ String getStateCUxD(String id, String type) {
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
       http.setTimeout(HTTPTimeOut);
-      String url = "http://" + String(HomeMaticConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
-      Serial.print("getStateFromCCUCUxD url: " + url + " -> ");
+      String url = "http://" + String(GlobalConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
+      Serial.print("getStateFromCUxD url: " + url + " -> ");
       http.begin(url);
       int httpCode = http.GET();
       String payload = "error";
@@ -52,7 +55,10 @@ String getStateCUxD(String id, String type) {
       payload = payload.substring(5, payload.indexOf("</ret>"));
       Serial.println("result: " + payload);
       return payload;
-    } else ESP.restart();
+    } else {
+      if (!doWifiConnect())
+        ESP.restart();
+      }
   } else return "";
 }
 

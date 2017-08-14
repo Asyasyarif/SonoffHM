@@ -16,22 +16,21 @@
 #include <WiFiManager.h>
 #include <FS.h>
 #include <ArduinoJson.h>
+#include <WiFiUdp.h>
 
 #define IPSIZE         16
 #define DEVICENAMESIZE 255
+#define UDPPORT        6676
 
 struct hmconfig_t {
-  char ccuIP[IPSIZE]   = "";
-  char DeviceName[DEVICENAMESIZE] = "";
   String ChannelName = "";
 } HomeMaticConfig;
 
 struct loxoneconfig_t {
   char Username[DEVICENAMESIZE] = "";
   char Password[DEVICENAMESIZE] = "";
+  char UDPPort[10] = "";
 } LoxoneConfig;
-
-byte BackendType = 0;
 
 #define greenLEDPin           13
 #define RelayPin              12
@@ -40,13 +39,33 @@ byte BackendType = 0;
 #define ConfigPortalTimeout  180  //Timeout (Sekunden) des AccessPoint-Modus
 #define HTTPTimeOut         3000  //Timeout (Millisekunden) für http requests
 
-#define BackendType_HomeMatic 0
+enum BackendTypes_e {
+  BackendType_HomeMatic,
+  BackendType_Loxone
+};
+
+enum RelayStates_e {
+  RELAYSTATE_OFF,
+  RELAYSTATE_ON
+};
+
+enum TransmitStates_e {
+  NO_TRANSMITSTATE,
+  TRANSMITSTATE
+};
+
+struct globalconfig_t {
+  char ccuIP[IPSIZE]   = "";
+  char DeviceName[DEVICENAMESIZE] = "";
+  bool restoreOldRelayState = false;
+  bool lastRelayState = false;
+  byte BackendType = BackendType_HomeMatic;
+} GlobalConfig;
 
 String bootConfigModeFilename = "bootcfg.mod";
-
+String lastRelayStateFilename = "laststat.txt";
 bool RelayState = LOW;
 bool KeyPress = false;
-bool restoreOldState = false;
 unsigned long LastMillisKeyPress = 0;
 unsigned long TimerStartMillis = 0;
 int TimerSeconds = 0;
@@ -64,9 +83,14 @@ struct sonoffnetconfig_t {
 } SonoffNetConfig;
 bool startWifiManager = false;
 
+struct udp_t {
+  WiFiUDP UDP;
+  char incomingPacket[255];
+} UDPClient;
+
 void setup() {
   Serial.begin(115200);
-  Serial.println("Sonoff " + WiFi.macAddress() + " startet...");
+  Serial.println("\nSonoff " + WiFi.macAddress() + " startet...");
   pinMode(greenLEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
@@ -115,46 +139,83 @@ void setup() {
   server.on("/toggle", webToggleRelay);
   server.on("/state", replyRelayState);
   server.on("/getstate", replyRelayState);
-  server.on("/bootConfigMode", bootConfigMode);
+  server.on("/bootConfigMode", setBootConfigMode);
   server.begin();
 
-  if (BackendType == BackendType_HomeMatic) {
-    HomeMaticConfig.ChannelName =  "CUxD." + getStateCUxD(HomeMaticConfig.DeviceName, "Address");
+  GlobalConfig.lastRelayState = getLastState();
+
+  if (GlobalConfig.BackendType == BackendType_HomeMatic) {
+    HomeMaticConfig.ChannelName =  "CUxD." + getStateCUxD(GlobalConfig.DeviceName, "Address");
     digitalWrite(greenLEDPin, HIGH);
-    if ((restoreOldState) && (getStateCUxD(HomeMaticConfig.ChannelName + ".STATE", "State") == "true")) {
-      switchRelayOn(false);
+    if ((GlobalConfig.restoreOldRelayState) && GlobalConfig.lastRelayState == true) {
+      switchRelay(RELAYSTATE_ON);
     } else {
-      switchRelayOff((getStateCUxD(HomeMaticConfig.ChannelName + ".STATE", "State") == "true"));
+      switchRelay(RELAYSTATE_OFF, (getStateCUxD(HomeMaticConfig.ChannelName + ".STATE", "State") == "true"));
+    }
+  }
+
+  if (GlobalConfig.BackendType == BackendType_Loxone) {
+    if ((GlobalConfig.restoreOldRelayState) && GlobalConfig.lastRelayState == true) {
+      switchRelay(RELAYSTATE_ON);
+    } else {
+      switchRelay(RELAYSTATE_OFF);
     }
   }
   startOTAhandling();
+  UDPClient.UDP.begin(UDPPORT);
 }
 
 void loop() {
+  //Überlauf der millis() abfangen
   if (LastMillisKeyPress > millis())
     LastMillisKeyPress = millis();
   if (TimerStartMillis > millis())
     TimerStartMillis = millis();
 
+  //auf OTA Anforderung reagieren
   ArduinoOTA.handle();
+
+  //eingehende UDP Kommandos abarbeiten
+  String udpMessage = handleUDP();
+  if (udpMessage == "bootConfigMode")
+    setBootConfigMode;
+  if (udpMessage == "1" || udpMessage == "on")
+    switchRelay(RELAYSTATE_ON);
+  if (udpMessage == "0" || udpMessage == "off")
+    switchRelay(RELAYSTATE_OFF);
+  if (udpMessage == "2" || udpMessage == "toggle")
+    toggleRelay(false);
+  if (udpMessage.indexOf("1?t=") != -1) {
+    TimerSeconds = (udpMessage.substring(4, udpMessage.length())).toInt();
+    if (TimerSeconds > 0) {
+      TimerStartMillis = millis();
+      Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
+    } else {
+      Serial.println("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0");
+    }
+    switchRelay(RELAYSTATE_ON);
+  }
+
+  //eingehende HTTP Anfragen abarbeiten
   server.handleClient();
+
+  //Tasterbedienung am Sonoff abarbeiten
   if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
     LastMillisKeyPress = millis();
     if (KeyPress == false) {
       TimerSeconds = 0;
-      toggleRelay(true);
+      toggleRelay(TRANSMITSTATE);
       KeyPress = true;
     }
   } else {
     KeyPress = false;
   }
 
+  //Timer 
   if (TimerSeconds > 0 && millis() - TimerStartMillis > TimerSeconds * 1000) {
     Serial.println("Timer abgelaufen. Schalte Relais aus.");
-    switchRelayOff(true);
+    switchRelay(RELAYSTATE_OFF, TRANSMITSTATE);
   }
-
-  delay(50);
 }
 
 void replyRelayState() {
@@ -162,14 +223,13 @@ void replyRelayState() {
 }
 
 void webToggleRelay() {
-  toggleRelay(false);
+  toggleRelay(NO_TRANSMITSTATE);
 }
 void webSwitchRelayOff() {
-  switchRelayOff(false);
+  switchRelay(RELAYSTATE_OFF);
 }
 
 void webSwitchRelayOn() {
-  switchRelayOn(false);
   if (server.args() > 0) {
     for (int i = 0; i < server.args(); i++) {
       if (server.argName(i) == "t") {
@@ -186,62 +246,38 @@ void webSwitchRelayOn() {
     TimerSeconds = 0;
     Serial.println("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0");
   }
+  switchRelay(RELAYSTATE_ON);
 }
 
-void switchRelayOn(bool transmitState) {
-  Serial.println("switchRelayOn()");
-  RelayState = HIGH;
-  if (digitalRead(RelayPin) != RelayState) {
-    digitalWrite(RelayPin, RelayState);
-    digitalWrite(greenLEDPin, !RelayState);
-    if (transmitState) {
-      if (BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE", "1");
-    }
-  }
-  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer>");
+void switchRelay(bool toState) {
+  switchRelay(toState, false);
 }
+void switchRelay(bool toState, bool transmitState) {
+  RelayState = toState;
+  Serial.println("Switch Relay to " + String(toState) + " with transmitState = " + String(transmitState));
 
-void switchRelayOff(bool transmitState) {
-  Serial.println("switchRelayOff()");
-  TimerSeconds = 0;
-  RelayState = LOW;
-  if (digitalRead(RelayPin) != RelayState) {
-    digitalWrite(RelayPin, RelayState);
-    digitalWrite(greenLEDPin, !RelayState);
-    if (transmitState) {
-      if (BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE",  "0" );
-    }
+  if (toState == RELAYSTATE_OFF) {
+    TimerSeconds = 0;
   }
-  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state>");
+
+  if (transmitState) {
+    if (GlobalConfig.BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE", String(RelayState));
+  }
+
+  if (GlobalConfig.BackendType == BackendType_Loxone) sendUDP(String(GlobalConfig.DeviceName) + "=" + String(RelayState));
+  digitalWrite(greenLEDPin, !RelayState);
+  digitalWrite(RelayPin, RelayState);
+  setLastState(RelayState);
+  server.send(200, "text/plain", "<state>" + String(RelayState) + "</state><timer>" + String(TimerSeconds) + "</timer>");
 }
 
 void toggleRelay(bool transmitState) {
   if (digitalRead(RelayPin) == LOW) {
-    switchRelayOn(transmitState);
+    switchRelay(RELAYSTATE_ON, transmitState);
   } else  {
-    switchRelayOff(transmitState);
+    switchRelay(RELAYSTATE_OFF, transmitState);
   }
 }
-
-void bootConfigMode() {
-  if (SPIFFS.begin()) {
-    Serial.println("mounted file system");
-    if (!SPIFFS.exists("/" + bootConfigModeFilename)) {
-      File bootConfigModeFile = SPIFFS.open("/" + bootConfigModeFilename, "w");
-      bootConfigModeFile.print("0");
-      bootConfigModeFile.close();
-      SPIFFS.end();
-      Serial.println("Boot to ConfigMode requested. Restarting...");
-      server.send(200, "text/plain", "<state>enableBootConfigMode - Rebooting</state>");
-      delay(500);
-      ESP.restart();
-    } else {
-      server.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
-      SPIFFS.end();
-    }
-  }
-}
-
 void blinkLED(int count) {
   digitalWrite(greenLEDPin, LOW);
   delay(100);
