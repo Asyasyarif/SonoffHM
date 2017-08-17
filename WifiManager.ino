@@ -25,6 +25,7 @@ bool doWifiConnect() {
     while (WiFi.status() != WL_CONNECTED) {
       waitCounter++;
       Serial.print(".");
+      digitalWrite(greenLEDPin, (!(digitalRead(greenLEDPin))));
       if (waitCounter == 20) {
         return false;
       }

@@ -3,6 +3,7 @@ bool setStateCUxD(String id, String value) {
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
       http.setTimeout(HTTPTimeOut);
+      id.replace(" ", "%20");
       String url = "http://" + String(GlobalConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22).State(" + value + ")";
       Serial.print("setStateCUxD url: " + url + " -> ");
       http.begin(url);
@@ -15,7 +16,7 @@ bool setStateCUxD(String id, String value) {
       }
       if (httpCode != 200) {
         blinkLED(3);
-        Serial.println("HTTP " + id + " failed with HTTP Error Code "+String(httpCode));
+        Serial.println("HTTP " + id + " failed with HTTP Error Code " + String(httpCode));
       }
       http.end();
 
@@ -28,7 +29,7 @@ bool setStateCUxD(String id, String value) {
     } else {
       if (!doWifiConnect())
         ESP.restart();
-      }
+    }
   } else return true;
 }
 
@@ -37,6 +38,7 @@ String getStateCUxD(String id, String type) {
     if (WiFi.status() == WL_CONNECTED) {
       HTTPClient http;
       http.setTimeout(HTTPTimeOut);
+      id.replace(" ", "%20");
       String url = "http://" + String(GlobalConfig.ccuIP) + ":8181/cuxd.exe?ret=dom.GetObject(%22" + id + "%22)." + type + "()";
       Serial.print("getStateFromCUxD url: " + url + " -> ");
       http.begin(url);
@@ -58,7 +60,7 @@ String getStateCUxD(String id, String type) {
     } else {
       if (!doWifiConnect())
         ESP.restart();
-      }
+    }
   } else return "";
 }
 

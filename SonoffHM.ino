@@ -18,6 +18,8 @@
 #include <ArduinoJson.h>
 #include <WiFiUdp.h>
 
+const String FIRMWARE_VERSION = "1.0";
+
 #define IPSIZE         16
 #define DEVICENAMESIZE 255
 #define UDPPORT        6676
@@ -70,7 +72,7 @@ unsigned long LastMillisKeyPress = 0;
 unsigned long TimerStartMillis = 0;
 int TimerSeconds = 0;
 
-ESP8266WebServer server(80);
+ESP8266WebServer WebServer(80);
 
 //WifiManager - don't touch
 bool shouldSaveConfig        = false;
@@ -131,22 +133,25 @@ void setup() {
     Serial.println("WLAN erfolgreich verbunden!");
     printWifiStatus();
   } else ESP.restart();
-  server.on("/0", webSwitchRelayOff);
-  server.on("/off", webSwitchRelayOff);
-  server.on("/1", webSwitchRelayOn);
-  server.on("/on", webSwitchRelayOn);
-  server.on("/2", webToggleRelay);
-  server.on("/toggle", webToggleRelay);
-  server.on("/state", replyRelayState);
-  server.on("/getstate", replyRelayState);
-  server.on("/bootConfigMode", setBootConfigMode);
-  server.begin();
+  WebServer.on("/0", webSwitchRelayOff);
+  WebServer.on("/off", webSwitchRelayOff);
+  WebServer.on("/1", webSwitchRelayOn);
+  WebServer.on("/on", webSwitchRelayOn);
+  WebServer.on("/2", webToggleRelay);
+  WebServer.on("/toggle", webToggleRelay);
+  WebServer.on("/state", replyRelayState);
+  WebServer.on("/getstate", replyRelayState);
+  WebServer.on("/bootConfigMode", setBootConfigMode);
+  WebServer.on("/version", versionHtml);
+  WebServer.on("/config", configHtml);
+  WebServer.onNotFound(defaultHtml);
+  WebServer.begin();
 
   GlobalConfig.lastRelayState = getLastState();
 
+  digitalWrite(greenLEDPin, HIGH);
   if (GlobalConfig.BackendType == BackendType_HomeMatic) {
     HomeMaticConfig.ChannelName =  "CUxD." + getStateCUxD(GlobalConfig.DeviceName, "Address");
-    digitalWrite(greenLEDPin, HIGH);
     if ((GlobalConfig.restoreOldRelayState) && GlobalConfig.lastRelayState == true) {
       switchRelay(RELAYSTATE_ON);
     } else {
@@ -197,7 +202,7 @@ void loop() {
   }
 
   //eingehende HTTP Anfragen abarbeiten
-  server.handleClient();
+  WebServer.handleClient();
 
   //Tasterbedienung am Sonoff abarbeiten
   if (digitalRead(SwitchPin) == LOW && millis() - LastMillisKeyPress > MillisKeyBounce) {
@@ -211,42 +216,15 @@ void loop() {
     KeyPress = false;
   }
 
-  //Timer 
+  //Timer
   if (TimerSeconds > 0 && millis() - TimerStartMillis > TimerSeconds * 1000) {
     Serial.println("Timer abgelaufen. Schalte Relais aus.");
     switchRelay(RELAYSTATE_OFF, TRANSMITSTATE);
   }
 }
 
-void replyRelayState() {
-  server.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>");
-}
-
-void webToggleRelay() {
-  toggleRelay(NO_TRANSMITSTATE);
-}
-void webSwitchRelayOff() {
-  switchRelay(RELAYSTATE_OFF);
-}
-
-void webSwitchRelayOn() {
-  if (server.args() > 0) {
-    for (int i = 0; i < server.args(); i++) {
-      if (server.argName(i) == "t") {
-        TimerSeconds = server.arg(i).toInt();
-        if (TimerSeconds > 0) {
-          TimerStartMillis = millis();
-          Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
-        } else {
-          Serial.println("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0");
-        }
-      }
-    }
-  } else {
-    TimerSeconds = 0;
-    Serial.println("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0");
-  }
-  switchRelay(RELAYSTATE_ON);
+void sendDefaultWebCmdReply() {
+  WebServer.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>");
 }
 
 void switchRelay(bool toState) {
@@ -268,7 +246,6 @@ void switchRelay(bool toState, bool transmitState) {
   digitalWrite(greenLEDPin, !RelayState);
   digitalWrite(RelayPin, RelayState);
   setLastState(RelayState);
-  server.send(200, "text/plain", "<state>" + String(RelayState) + "</state><timer>" + String(TimerSeconds) + "</timer>");
 }
 
 void toggleRelay(bool transmitState) {

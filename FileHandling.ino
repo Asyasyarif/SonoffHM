@@ -15,6 +15,7 @@ bool loadSystemConfig() {
         JsonObject& json = jsonBuffer.parseObject(buf.get());
         Serial.println("Content of JSON Config-File: /" + configJsonFile);
         json.printTo(Serial);
+        Serial.println();
         if (json.success()) {
           Serial.println("\nJSON OK");
           ((json["ip"]).as<String>()).toCharArray(SonoffNetConfig.ip, IPSIZE);
@@ -68,6 +69,7 @@ bool saveSystemConfig() {
   }
 
   json.printTo(Serial);
+  Serial.println();
   json.printTo(configFile);
   configFile.close();
 
@@ -101,7 +103,7 @@ bool getLastState() {
         bool bLastState = false;
         if (lastStateFile && lastStateFile.size()) {
           String content = String(char(lastStateFile.read()));
-          Serial.println("getLastState FileContent = "+content);
+          Serial.println("getLastState FileContent = " + content);
           bLastState = (content == "1");
         }
         SPIFFS.end();
@@ -127,11 +129,11 @@ void setBootConfigMode() {
       bootConfigModeFile.close();
       SPIFFS.end();
       Serial.println("Boot to ConfigMode requested. Restarting...");
-      server.send(200, "text/plain", "<state>enableBootConfigMode - Rebooting</state>");
+      WebServer.send(200, "text/plain", "<state>enableBootConfigMode - Rebooting</state>");
       delay(500);
       ESP.restart();
     } else {
-      server.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
+      WebServer.send(200, "text/plain", "<state>enableBootConfigMode - FAILED!</state>");
       SPIFFS.end();
     }
   }
