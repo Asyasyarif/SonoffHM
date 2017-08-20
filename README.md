@@ -33,6 +33,8 @@
 
 **Eine Anleitung, wie man den Anschluss des FTDI-Interface an den Sonoff herstellt, stelle ich hier nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
 
+**Bevor der Sonoff geflasht werden kann, muss er in den "Flash-Modus" versetzt werden. Dazu hält man den Taster gedrückt, während man den FTDI-Adapter an den USB-Port steckt. Danach kann der Taster losgelassen werden.**
+
 Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen. [Link zu espota](https://github.com/esp8266/Arduino/tree/master/tools)
     
     espota.py -i *IP* -f SonoffHM.ino.generic.bin 
