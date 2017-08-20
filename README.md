@@ -15,11 +15,23 @@
 
 
 **2.) Flashen des Sonoff Devices** 
-  - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. Hier der [Link zur esptool.exe!](https://github.com/thekikz/esptool/blob/master/esptool.exe) für Windows-Nutzer. Plattformunabhängig kann das Python Package [esptool](https://pypi.python.org/pypi/esptool/) genutzt werden 
+  - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. 
   
-  esptool.exe -vv -cd ck -cb 115200 -cp *COMPort* -ca 0x00000 -cf SonoffHM.ino.generic.bin
+  Windows-Nutzer: Hier der Link zum [ESP8266 DOWNLOAD TOOL](https://raw.githubusercontent.com/jp112sdl/Network/blob/master/ESP8266/Flash/FLASH_DOWNLOAD_TOOLS_V3.4.4.zip). 
+  
+  Nach dem Entpacken und Starten der `ESPFlashDownloadTool_v3.4.4.exe` wählt man zunächst ESP8266 aus.
+  
+  Im folgenden Fenster sind die rot umrahmten Einstellungen zu treffen:
+  
+  ![flash1](Images/Sonoff-Flash1.png)
+  
+  _(Wobei der COM-Port "COM4" entsprechend dem eigenen COM-Port des FTDI-Adapters aus dem Gerätemanager anzupassen ist!)_
+ 
+  Plattformunabhängig kann das Python Package [esptool](https://pypi.python.org/pypi/esptool/) genutzt werden.
+  
+  `esptool.py --port /dev/ttyN  --baud 115200 write_flash --flash_mode dout 0x00000 ./SonoffHM.ino.generic.bin`
 
-**Eine Anleitung, wie man generell Firmware auf den Sonoff bekommt (Anschluss des FTDI-Interface, Pinbelegung etc), stelle ich hier   nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
+**Eine Anleitung, wie man den Anschluss des FTDI-Interface an den Sonoff herstellt, stelle ich hier nicht bereit. Man findet HowTos bei Google wenn man nach "sonoff flash" sucht.**
 
 Der Flash-Vorgang muss nur 1x via FTDI-Kabel erfolgen. Anschließend ist es möglich, den Sonoff via OTA (Over-the-air) zu flashen. [Link zu espota](https://github.com/esp8266/Arduino/tree/master/tools)
     
