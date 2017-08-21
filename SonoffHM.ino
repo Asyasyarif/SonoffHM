@@ -3,7 +3,7 @@
   Flash Mode: DOUT
   Flash Frequency: 40 MHz
   CPU Frequency: 80 MHz
-  Flash Size: 1M (128K SPIFFS) //former: 256k SPIFFS
+  Flash Size: 1M (64 SPIFFS) //former: 256k SPIFFS
   Debug Port: disabled
   Debug Level: none
   Reset Mode: ck
