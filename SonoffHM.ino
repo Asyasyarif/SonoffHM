@@ -1,9 +1,9 @@
 /*
   Generic ESP8266 Module
-  Flash Mode: QIO
+  Flash Mode: DOUT
   Flash Frequency: 40 MHz
   CPU Frequency: 80 MHz
-  Flash Size: 1M (256K SPIFFS)
+  Flash Size: 1M (128K SPIFFS) //former: 256k SPIFFS
   Debug Port: disabled
   Debug Level: none
   Reset Mode: ck
@@ -21,7 +21,7 @@
 const String FIRMWARE_VERSION = "1.0";
 
 #define IPSIZE         16
-#define DEVICENAMESIZE 255
+#define VARIABLESIZE 255
 #define UDPPORT        6676
 
 struct hmconfig_t {
@@ -29,12 +29,12 @@ struct hmconfig_t {
 } HomeMaticConfig;
 
 struct loxoneconfig_t {
-  char Username[DEVICENAMESIZE] = "";
-  char Password[DEVICENAMESIZE] = "";
+  char Username[VARIABLESIZE] = "";
+  char Password[VARIABLESIZE] = "";
   char UDPPort[10] = "";
 } LoxoneConfig;
 
-#define greenLEDPin           13
+#define LEDPin                13
 #define RelayPin              12
 #define SwitchPin              0
 #define MillisKeyBounce      500  //Millisekunden zwischen 2xtasten
@@ -58,7 +58,7 @@ enum TransmitStates_e {
 
 struct globalconfig_t {
   char ccuIP[IPSIZE]   = "";
-  char DeviceName[DEVICENAMESIZE] = "";
+  char DeviceName[VARIABLESIZE] = "";
   bool restoreOldRelayState = false;
   bool lastRelayState = false;
   byte BackendType = BackendType_HomeMatic;
@@ -71,6 +71,8 @@ bool KeyPress = false;
 unsigned long LastMillisKeyPress = 0;
 unsigned long TimerStartMillis = 0;
 int TimerSeconds = 0;
+bool OTAStart = false;
+
 
 ESP8266WebServer WebServer(80);
 
@@ -93,7 +95,7 @@ struct udp_t {
 void setup() {
   Serial.begin(115200);
   Serial.println("\nSonoff " + WiFi.macAddress() + " startet...");
-  pinMode(greenLEDPin, OUTPUT);
+  pinMode(LEDPin, OUTPUT);
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
 
@@ -119,9 +121,9 @@ void setup() {
         startWifiManager = true;
         break;
       }
-      digitalWrite(greenLEDPin, HIGH);
+      digitalWrite(LEDPin, HIGH);
       delay(100);
-      digitalWrite(greenLEDPin, LOW);
+      digitalWrite(LEDPin, LOW);
       delay(100);
     }
     Serial.println("Config-Modus " + String(((startWifiManager) ? "" : "nicht ")) + "aktiviert.");
@@ -149,7 +151,7 @@ void setup() {
 
   GlobalConfig.lastRelayState = getLastState();
 
-  digitalWrite(greenLEDPin, HIGH);
+  digitalWrite(LEDPin, HIGH);
   if (GlobalConfig.BackendType == BackendType_HomeMatic) {
     HomeMaticConfig.ChannelName =  "CUxD." + getStateCUxD(GlobalConfig.DeviceName, "Address");
     if ((GlobalConfig.restoreOldRelayState) && GlobalConfig.lastRelayState == true) {
@@ -223,10 +225,6 @@ void loop() {
   }
 }
 
-void sendDefaultWebCmdReply() {
-  WebServer.send(200, "text/plain", "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>");
-}
-
 void switchRelay(bool toState) {
   switchRelay(toState, false);
 }
@@ -243,7 +241,7 @@ void switchRelay(bool toState, bool transmitState) {
   }
 
   if (GlobalConfig.BackendType == BackendType_Loxone) sendUDP(String(GlobalConfig.DeviceName) + "=" + String(RelayState));
-  digitalWrite(greenLEDPin, !RelayState);
+  digitalWrite(LEDPin, !RelayState);
   digitalWrite(RelayPin, RelayState);
   setLastState(RelayState);
 }
@@ -256,12 +254,12 @@ void toggleRelay(bool transmitState) {
   }
 }
 void blinkLED(int count) {
-  digitalWrite(greenLEDPin, LOW);
+  digitalWrite(LEDPin, LOW);
   delay(100);
   for (int i = 0; i < count; i++) {
-    digitalWrite(greenLEDPin, HIGH);
+    digitalWrite(LEDPin, HIGH);
     delay(100);
-    digitalWrite(greenLEDPin, LOW);
+    digitalWrite(LEDPin, LOW);
     delay(100);
   }
   delay(200);

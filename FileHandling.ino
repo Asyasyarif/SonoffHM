@@ -22,9 +22,9 @@ bool loadSystemConfig() {
           ((json["netmask"]).as<String>()).toCharArray(SonoffNetConfig.netmask, IPSIZE);
           ((json["gw"]).as<String>()).toCharArray(SonoffNetConfig.gw, IPSIZE);
           ((json["ccuip"]).as<String>()).toCharArray(GlobalConfig.ccuIP, IPSIZE);
-          ((json["sonoff"]).as<String>()).toCharArray(GlobalConfig.DeviceName, DEVICENAMESIZE);
-          //((json["loxusername"]).as<String>()).toCharArray(LoxoneConfig.Username, DEVICENAMESIZE);
-          //((json["loxpassword"]).as<String>()).toCharArray(LoxoneConfig.Password, DEVICENAMESIZE);
+          ((json["sonoff"]).as<String>()).toCharArray(GlobalConfig.DeviceName, VARIABLESIZE);
+          //((json["loxusername"]).as<String>()).toCharArray(LoxoneConfig.Username, VARIABLESIZE);
+          //((json["loxpassword"]).as<String>()).toCharArray(LoxoneConfig.Password, VARIABLESIZE);
           ((json["loxudpport"]).as<String>()).toCharArray(LoxoneConfig.UDPPort, 10);
 
           GlobalConfig.BackendType = json["backendtype"];
@@ -66,14 +66,15 @@ bool saveSystemConfig() {
   File configFile = SPIFFS.open("/" + configJsonFile, "w");
   if (!configFile) {
     Serial.println("failed to open config file for writing");
+    return false;
   }
 
   json.printTo(Serial);
   Serial.println();
   json.printTo(configFile);
   configFile.close();
-
   SPIFFS.end();
+  return true;
 }
 
 void setLastState(bool state) {

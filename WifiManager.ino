@@ -25,7 +25,7 @@ bool doWifiConnect() {
     while (WiFi.status() != WL_CONNECTED) {
       waitCounter++;
       Serial.print(".");
-      digitalWrite(greenLEDPin, (!(digitalRead(greenLEDPin))));
+      digitalWrite(LEDPin, (!(digitalRead(LEDPin))));
       if (waitCounter == 20) {
         return false;
       }
@@ -35,15 +35,15 @@ bool doWifiConnect() {
     return true;
   } else {
     WiFiManager wifiManager;
-    digitalWrite(greenLEDPin, LOW);
+    digitalWrite(LEDPin, LOW);
     wifiManager.setDebugOutput(wifiManagerDebugOutput);
     wifiManager.setAPCallback(configModeCallback);
     wifiManager.setSaveConfigCallback(saveConfigCallback);
     WiFiManagerParameter custom_ccuip("ccu", "IP der CCU2", GlobalConfig.ccuIP, IPSIZE);
-    //WiFiManagerParameter custom_loxusername("loxusername", "Loxone Username", "", DEVICENAMESIZE);
-    //WiFiManagerParameter custom_loxpassword("loxpassword", "Loxone Password", "", DEVICENAMESIZE,4);
+    //WiFiManagerParameter custom_loxusername("loxusername", "Loxone Username", "", VARIABLESIZE);
+    //WiFiManagerParameter custom_loxpassword("loxpassword", "Loxone Password", "", VARIABLESIZE,4);
     WiFiManagerParameter custom_loxudpport("loxudpport", "Loxone UDP Port", LoxoneConfig.UDPPort, 10);
-    WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff DeviceName", GlobalConfig.DeviceName, DEVICENAMESIZE);
+    WiFiManagerParameter custom_sonoffname("sonoff", "Sonoff Ger&auml;tename", GlobalConfig.DeviceName, VARIABLESIZE);
     char*chrRestoreOldState = "0";
     if (GlobalConfig.restoreOldRelayState) chrRestoreOldState =  "1" ;
     WiFiManagerParameter custom_cbrestorestate("restorestate", "Schaltzustand wiederherstellen: ", chrRestoreOldState, 8, 1);

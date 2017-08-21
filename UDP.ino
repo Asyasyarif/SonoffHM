@@ -3,13 +3,13 @@ String handleUDP() {
   if (packetSize) {
     Serial.printf("Received %d bytes from %s, port %d\n", packetSize, UDPClient.UDP.remoteIP().toString().c_str(), UDPClient.UDP.remotePort());
     int len = UDPClient.UDP.read(UDPClient.incomingPacket, 255);
-    if (len > 0) {
+    if (len > 0)
       UDPClient.incomingPacket[len] = 0;
-    }
+
     Serial.printf("UDP packet contents: %s\n", UDPClient.incomingPacket);
 
     UDPClient.UDP.beginPacket(UDPClient.UDP.remoteIP(), UDPClient.UDP.remotePort());
-    String replyMsg = "<state>" + String(digitalRead(RelayPin)) + "</state><timer>" + String(TimerSeconds) + "</timer><resttimer>" + String((TimerSeconds > 0) ? (TimerSeconds - (millis() - TimerStartMillis) / 1000) : 0) + "</resttimer>";
+    String replyMsg = createReplyString();
     UDPClient.UDP.write(replyMsg.c_str());
     UDPClient.UDP.endPacket();
 
