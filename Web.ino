@@ -24,13 +24,13 @@ void webSwitchRelayOn() {
           TimerStartMillis = millis();
           Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
         } else {
-          Serial.println("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0");
+          Serial.println(F("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0"));
         }
       }
     }
   } else {
     TimerSeconds = 0;
-    Serial.println("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0");
+    Serial.println(F("webSwitchRelayOn(), keine Parameter, TimerSeconds = 0"));
   }
   switchRelay(RELAYSTATE_ON);
   sendDefaultWebCmdReply();
@@ -72,9 +72,9 @@ void defaultHtml() {
   if (GlobalConfig.BackendType == BackendType_Loxone)
     page += FPSTR(HTTP_LOX_STYLE);
   page += FPSTR(HTTP_HEAD_END);
-  page += "<div class='fbg'>";
+  page += F("<div class='fbg'>");
 
-  page += "<form method='post' action='control'>";
+  page += F("<form method='post' action='control'>");
   page += FPSTR(HTTP_CURRENT_STATE_LABEL);
   page.replace("{v}", GlobalConfig.DeviceName);
 
@@ -89,7 +89,7 @@ void defaultHtml() {
   page += FPSTR(HTTP_FW_LABEL);
   page.replace("{fw}", FIRMWARE_VERSION);
 
-  page += "</form></div>";
+  page += F("</form></div>");
   page += FPSTR(HTTP_END);
   WebServer.sendHeader("Content-Length", String(page.length()));
   WebServer.send(200, "text/html", page);
@@ -125,7 +125,6 @@ void configHtml() {
         } else {
           showHMDevError = true;
         }
-
       }
     }
   }
@@ -138,8 +137,8 @@ void configHtml() {
   if (GlobalConfig.BackendType == BackendType_Loxone)
     page += FPSTR(HTTP_LOX_STYLE);
   page += FPSTR(HTTP_HEAD_END);
-  page += "<div class='fbg'>";
-  page += "<form method='post' action='config'>";
+  page += F("<div class='fbg'>");
+  page += F("<form method='post' action='config'>");
 
   page += FPSTR(HTTP_CONF);
   if (GlobalConfig.BackendType == BackendType_HomeMatic) {
@@ -161,14 +160,14 @@ void configHtml() {
 
   if (sc && !showHMDevError) {
     if (saveSuccess) {
-      page.replace("{sl}","<label style='color:green'>Speichern erfolgreich.</label>");
+      page.replace("{sl}",F("<label style='color:green'>Speichern erfolgreich.</label>"));
     } else {
-      page.replace("{sl}","<label style='color:red'>Speichern fehlgeschlagen.</label>");
+      page.replace("{sl}",F("<label style='color:red'>Speichern fehlgeschlagen.</label>"));
     }
   }
   
   if (showHMDevError)
-    page.replace("{sl}","<label style='color:red'>Ger&auml;tenamen in CUxD pr&uuml;fen!</label>");
+    page.replace("{sl}",F("<label style='color:red'>Ger&auml;tenamen in CUxD pr&uuml;fen!</label>"));
 
   if (!sc && !showHMDevError)
     page.replace("{sl}","");

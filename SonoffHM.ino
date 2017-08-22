@@ -99,23 +99,23 @@ void setup() {
   pinMode(RelayPin,    OUTPUT);
   pinMode(SwitchPin,   INPUT_PULLUP);
 
-  Serial.print("Config-Modus durch bootConfigMode aktivieren? ");
+  Serial.print(F("Config-Modus durch bootConfigMode aktivieren? "));
   if (SPIFFS.begin()) {
-    Serial.println("mounted file system");
+    Serial.println(F("bootConfigModeFilename mounted file system"));
     if (SPIFFS.exists("/" + bootConfigModeFilename)) {
       startWifiManager = true;
-      Serial.println("Ja, " + bootConfigModeFilename + " existiert, starte Config-Modus");
+      Serial.println(bootConfigModeFilename + " existiert, starte Config-Modus");
       SPIFFS.remove("/" + bootConfigModeFilename);
       SPIFFS.end();
     } else {
-      Serial.println("Nein, " + bootConfigModeFilename + " existiert nicht");
+      Serial.println(bootConfigModeFilename + " existiert NICHT");
     }
   } else {
-    Serial.println("Nein, SPIFFS mount fail!");
+    Serial.println(F("Nein, SPIFFS mount fail!"));
   }
 
   if (!startWifiManager) {
-    Serial.println("Config-Modus mit Taster aktivieren?");
+    Serial.println(F("Config-Modus mit Taster aktivieren?"));
     for (int i = 0; i < 20; i++) {
       if (digitalRead(SwitchPin) == LOW) {
         startWifiManager = true;
@@ -132,7 +132,7 @@ void setup() {
   if (!loadSystemConfig()) startWifiManager = true;
 
   if (doWifiConnect()) {
-    Serial.println("WLAN erfolgreich verbunden!");
+    Serial.println(F("WLAN erfolgreich verbunden!"));
     printWifiStatus();
   } else ESP.restart();
   WebServer.on("/0", webSwitchRelayOff);
@@ -198,7 +198,7 @@ void loop() {
       TimerStartMillis = millis();
       Serial.println("webSwitchRelayOn(), Timer aktiviert, Sekunden: " + String(TimerSeconds));
     } else {
-      Serial.println("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0");
+      Serial.println(F("webSwitchRelayOn(), Parameter, aber mit TimerSeconds = 0"));
     }
     switchRelay(RELAYSTATE_ON);
   }
@@ -220,7 +220,7 @@ void loop() {
 
   //Timer
   if (TimerSeconds > 0 && millis() - TimerStartMillis > TimerSeconds * 1000) {
-    Serial.println("Timer abgelaufen. Schalte Relais aus.");
+    Serial.println(F("Timer abgelaufen. Schalte Relais aus."));
     switchRelay(RELAYSTATE_OFF, TRANSMITSTATE);
   }
 }
@@ -236,14 +236,14 @@ void switchRelay(bool toState, bool transmitState) {
     TimerSeconds = 0;
   }
 
-  if (transmitState) {
-    if (GlobalConfig.BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE", String(RelayState));
-  }
-
   if (GlobalConfig.BackendType == BackendType_Loxone) sendUDP(String(GlobalConfig.DeviceName) + "=" + String(RelayState));
   digitalWrite(LEDPin, !RelayState);
   digitalWrite(RelayPin, RelayState);
   setLastState(RelayState);
+  
+  if (transmitState) {
+    if (GlobalConfig.BackendType == BackendType_HomeMatic) setStateCUxD(HomeMaticConfig.ChannelName + ".SET_STATE", String(RelayState));
+  }
 }
 
 void toggleRelay(bool transmitState) {

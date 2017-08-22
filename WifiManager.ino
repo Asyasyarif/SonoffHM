@@ -14,7 +14,7 @@ bool doWifiConnect() {
   const char* gwStr = SonoffNetConfig.gw; byte gwBytes[4]; parseBytes(gwStr, '.', gwBytes, 4, 10);
 
   if (!startWifiManager && _ssid != "" && _psk != "" ) {
-    Serial.println("Connecting WLAN the classic way...");
+    Serial.println(F("Connecting WLAN the classic way..."));
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
     WiFi.begin(_ssid.c_str(), _psk.c_str());
@@ -51,13 +51,13 @@ bool doWifiConnect() {
     String options = "";
     switch (GlobalConfig.BackendType) {
       case BackendType_HomeMatic:
-        options = "<option selected value='0'>HomeMatic</option><option value='1'>Loxone</option>";
+        options = F("<option selected value='0'>HomeMatic</option><option value='1'>Loxone</option>");
         break;
       case BackendType_Loxone:
-        options = "<option value='0'>HomeMatic</option><option selected value='1'>Loxone</option>";
+        options = F("<option value='0'>HomeMatic</option><option selected value='1'>Loxone</option>");
         break;
       default:
-        options = "<option value='0'>HomeMatic</option><option value='1'>Loxone</option>";
+        options = F("<option value='0'>HomeMatic</option><option value='1'>Loxone</option>");
         break;
     }
     WiFiManagerParameter custom_backendtype("backendtype", "Backend", "", 8, 2, options.c_str());
@@ -88,7 +88,7 @@ bool doWifiConnect() {
       }
       else {
         if (!wifiManager.startConfigPortal(Hostname.c_str())) {
-          Serial.println("failed to connect and hit timeout");
+          Serial.println(F("WM: failed to connect and hit timeout"));
           delay(500);
           ESP.restart();
         }
@@ -99,7 +99,7 @@ bool doWifiConnect() {
 
     wifiManager.autoConnect(Hostname.c_str());
 
-    Serial.println("Wifi Connected");
+    Serial.println(F("Wifi Connected"));
     Serial.println("CUSTOM STATIC IP: " + String(SonoffNetConfig.ip) + " Netmask: " + String(SonoffNetConfig.netmask) + " GW: " + String(SonoffNetConfig.gw));
     if (shouldSaveConfig) {
       if (String(custom_ip.getValue()).length() > 5) {

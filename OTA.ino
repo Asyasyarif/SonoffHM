@@ -1,6 +1,7 @@
+//latest FW on Github https://api.github.com/repos/jp112sdl/SonoffHM/releases/latest
 void startOTAhandling() {
   ArduinoOTA.onStart([]() {
-    Serial.println("Start updating");
+    Serial.println(F("Start updating"));
     OTAStart = true;
   });
   ArduinoOTA.onEnd([]() {
