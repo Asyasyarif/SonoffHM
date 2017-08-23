@@ -17,9 +17,11 @@
 **2.) Flashen des Sonoff Devices** 
   - Wer den Code nicht selbst kompilieren möchte/kann, hat die Möglichkeit, die **'SonoffHM.ino.generic.bin'** herunterzuladen und mittels esptool direkt auf den Sonoff zu flashen. 
   
-  Windows-Nutzer: Hier der Link zum [ESP8266 DOWNLOAD TOOL](https://raw.githubusercontent.com/jp112sdl/Network/blob/master/ESP8266/Flash/FLASH_DOWNLOAD_TOOLS_V3.4.4.zip). 
+  Windows-Nutzer: Hier der Link zum [ESP8266 Download Tool](http://espressif.com/en/support/download/other-tools). 
   
-  Nach dem Entpacken und Starten der `ESPFlashDownloadTool_v3.4.4.exe` wählt man zunächst ESP8266 aus.
+  Dort unter der Rubrik "Flash Download Tools (ESP8266 & ESP32)" die neueste Version downloaden.
+  
+  Nach dem Entpacken und Starten der `ESPFlashDownloadTool_vx.x.x.exe` wählt man zunächst ESP8266 aus.
   
   Im folgenden Fenster sind die rot umrahmten Einstellungen zu treffen:
   
